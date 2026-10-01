@@ -312,28 +312,30 @@ body {
 #gcd {
   position: absolute;
   left: 960px;
-  top: 26px;
+  top: 22px;
   transform: translateX(-50%);
   z-index: 41;
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 8px 24px;
-  border-radius: 24px;
-  background: rgba(3, 11, 40, 0.78);
-  border: 1.5px solid rgba(94, 225, 255, 0.45);
-  box-shadow: 0 0 22px rgba(94, 225, 255, 0.2);
-  backdrop-filter: blur(10px);
-  font: 800 28px 'JetBrains Mono', monospace;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 36px;
+  border-radius: 30px;
+  background: rgba(3, 11, 40, 0.88);
+  border: 2px solid rgba(94, 225, 255, 0.55);
+  box-shadow: 0 0 32px rgba(94, 225, 255, 0.35), inset 0 0 20px rgba(94, 225, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font: 800 48px 'JetBrains Mono', monospace;
   letter-spacing: 0.06em;
   color: #fff;
   pointer-events: none;
   white-space: nowrap;
 }
 #gcd .gl {
-  font-size: 14px;
+  font-size: 22px;
   letter-spacing: 0.22em;
   color: var(--acc);
+  font-weight: 800;
 }
 #gcd.idle #gcdv { opacity: 0.6; }
 .br {
@@ -885,7 +887,6 @@ body {
     <div class="hud" style="left:60px;top:34px"><span class="dot"></span>IDEAX 2026 · PROJECTOR · LIVE</div>
     <div class="pe" style="position:absolute; right:60px; top:28px; z-index:40; display:flex; gap:12px;">
       <button id="top-btn-add-sprint" class="hud-pill-btn accent">⚡ + ADD SPRINT</button>
-      <button id="top-btn-sprint-num" class="hud-pill-btn">🔢 SPRINT #</button>
       <button id="top-btn-control" class="hud-pill-btn">⚙ CONTROL</button>
     </div>
     <div id="gcd" class="idle"><span class="gl">48H EVENT</span><span id="gcdv">48:00:00</span></div>
@@ -959,39 +960,7 @@ body {
   </div>
 </div>
 
-<!-- Modal: Change Sprint Number -->
-<div id="modal-sprint-num" class="modal-backdrop">
-  <div class="modal-card" style="width:480px">
-    <div class="modal-hdr">
-      <div class="modal-title">🔢 CHANGE SPRINT NUMBER</div>
-      <button class="modal-close" id="modal-spnum-close">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>QUICK SELECT SPRINT</label>
-        <div class="preset-row" style="grid-template-columns: repeat(5, 1fr)">
-          <button type="button" class="sp-num-pre" data-num="1">Sprint 1</button>
-          <button type="button" class="sp-num-pre" data-num="2">Sprint 2</button>
-          <button type="button" class="sp-num-pre" data-num="3">Sprint 3</button>
-          <button type="button" class="sp-num-pre" data-num="4">Sprint 4</button>
-          <button type="button" class="sp-num-pre" data-num="5">Sprint 5</button>
-        </div>
-      </div>
-      <div class="form-group" style="margin-top:16px">
-        <label>ENTER SPRINT NUMBER (1 - 99)</label>
-        <div style="display:flex; gap:12px; align-items:center">
-          <input type="number" id="m-sp-num-input" min="1" max="99" value="1" style="font-size:22px; font-weight:900; text-align:center; flex:1">
-          <div id="m-sp-num-preview" style="font-family:'Big Shoulders Display',Impact,sans-serif; font-size:32px; color:var(--acc); font-weight:900; min-width:140px; text-align:center">SPRINT 01</div>
-        </div>
-      </div>
-      <div class="modal-actions" style="margin-top:24px">
-        <button id="m-spnum-apply" class="btn-primary">✓ SET SPRINT NUMBER</button>
-        <button id="m-spnum-jump" class="btn-accent">🚀 SET & SWITCH</button>
-        <button id="m-spnum-cancel" class="btn-ghost">CANCEL</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- Toast notification badge -->
 <div id="toast"></div>
@@ -1002,13 +971,7 @@ body {
     <button class="btn-icon" id="btn-pv" title="Previous Block">◀</button>
     <select id="ctl-sel"></select>
     <button class="btn-icon" id="btn-nx" title="Next Block">▶</button>
-    <!-- Quick Sprint Number Stepper -->
-    <div id="sp-quick-stepper" title="Current Sprint Number" style="display:flex;align-items:center;background:#0d2366;border:1px solid #3b82f6;border-radius:8px;padding:0 6px;height:36px">
-      <span style="font-size:11px;color:var(--dim);margin:0 4px;font-family:'JetBrains Mono',monospace;font-weight:700">SPRINT</span>
-      <button id="btn-sp-num-dec" style="width:24px;height:24px;padding:0;font-size:13px;background:none;border:none;color:#5ee1ff;cursor:pointer" title="Previous Sprint Number">◀</button>
-      <input id="in-sp-num-quick" type="text" value="01" style="width:36px;height:26px;text-align:center;font-weight:900;background:none;border:none;color:#ffffff;font-size:15px;font-family:'Space Grotesk',sans-serif" title="Edit Sprint Number">
-      <button id="btn-sp-num-inc" style="width:24px;height:24px;padding:0;font-size:13px;background:none;border:none;color:#5ee1ff;cursor:pointer" title="Next Sprint Number">▶</button>
-    </div>
+
     <button id="btn-pp">Pause</button>
     <button id="btn-m5">−5 min</button>
     <button id="btn-p5">+5 min</button>
@@ -1031,13 +994,13 @@ const SCHEDULE = {
   blocks: [
     { state: 'welcome', label: 'WELCOME' },
     { state: 'opening', label: 'OPENING' },
-    { state: 'development', label: 'SPRINT 01', sub: 'DAY 1 · BUILD', sec: 2 * 3600 },
+    { state: 'development', label: 'SPRINT', sec: 2 * 3600 },
     { state: 'breakfast', label: 'BREAKFAST', sec: 45 * 60 },
-    { state: 'development', label: 'SPRINT 02', sub: 'DAY 1 · BUILD', sec: 3.5 * 3600 },
+    { state: 'development', label: 'SPRINT', sec: 3.5 * 3600 },
     { state: 'lunch', label: 'LUNCH', sec: 3600 },
-    { state: 'development', label: 'SPRINT 03', sub: 'DAY 2 · BUILD', sec: 4 * 3600 },
+    { state: 'development', label: 'SPRINT', sec: 4 * 3600 },
     { state: 'dinner', label: 'DINNER', sec: 3600 },
-    { state: 'development', label: 'FINAL SPRINT', sub: 'DAY 3 · SHIP IT', sec: 2 * 3600 },
+    { state: 'development', label: 'SPRINT', sec: 2 * 3600 },
     { state: 'closing', label: 'CLOSING', sec: 8 }
   ]
 };
@@ -1389,11 +1352,10 @@ function showToast(msg) {
 
 function addSprint(label, sub, sec, pos = 'before-closing', jumpNow = false) {
   const nextNum = B.filter(b => b.state === 'development').length + 1;
-  const sLabel = label || `SPRINT ${String(nextNum).padStart(2, '0')}`;
-  const sSub = sub || `DAY 2 · BUILD`;
+  const sLabel = label || 'SPRINT';
   const sSec = sec || 2 * 3600;
 
-  const newBlock = { state: 'development', label: sLabel, sub: sSub, sec: sSec, isCustom: true };
+  const newBlock = { state: 'development', label: sLabel, sec: sSec, isCustom: true };
   let insertIdx = -1;
 
   if (pos === 'after-current' && S.idx < B.length - 1) {
@@ -1442,79 +1404,7 @@ function closeSprintModal() {
   if (modal) modal.classList.remove('show');
 }
 
-function getCurrentSprintNum() {
-  const curLabel = B[S.idx] ? B[S.idx].label : '';
-  const match = curLabel.match(/\d+/);
-  if (match) return parseInt(match[0], 10);
-  const devIdx = B.findIndex(b => b.state === 'development');
-  if (devIdx !== -1) {
-    const m = B[devIdx].label.match(/\d+/);
-    if (m) return parseInt(m[0], 10);
-  }
-  return 1;
-}
 
-function changeSprintNumber(num, shouldJump = false) {
-  const n = parseInt(num, 10);
-  if (isNaN(n) || n < 1) return;
-  const padNum = String(n).padStart(2, '0');
-  const targetLabel = `SPRINT ${padNum}`;
-
-  if (shouldJump) {
-    let foundIdx = B.findIndex(b => b.state === 'development' && (b.label.includes(padNum) || b.label === targetLabel));
-    if (foundIdx === -1) {
-      foundIdx = B.findIndex(b => b.state === 'development' && b.label.includes(String(n)));
-    }
-    if (foundIdx !== -1) {
-      setMode('development', foundIdx);
-      cmd('start');
-      showToast(`🚀 SWITCHED TO ${targetLabel}`);
-    } else {
-      addSprint(targetLabel, `DAY ${Math.min(3, Math.ceil(n / 2))} · BUILD`, 2 * 3600, 'before-closing', true);
-      showToast(`✨ CREATED & SWITCHED TO ${targetLabel}`);
-    }
-  } else {
-    let targetBlock = B[S.idx];
-    if (targetBlock.state !== 'development') {
-      const devIdx = B.findIndex(b => b.state === 'development');
-      if (devIdx !== -1) targetBlock = B[devIdx];
-    }
-    targetBlock.label = targetLabel;
-    
-    const l1 = $('#l1');
-    if (l1 && S.mode === 'development') {
-      l1.innerHTML = sp(targetLabel);
-    }
-    const cdl = $('#cdl');
-    if (cdl && S.mode === 'development') {
-      cdl.textContent = `TIME REMAINING · ${targetLabel}`;
-    }
-
-    showToast(`✓ SPRINT NUMBER UPDATED: ${targetLabel}`);
-    commit();
-  }
-
-  const qIn = $('#in-sp-num-quick');
-  if (qIn) qIn.value = padNum;
-}
-
-function openSprintNumModal() {
-  const modal = $('#modal-sprint-num');
-  if (!modal) return;
-  const curNum = getCurrentSprintNum();
-  const input = $('#m-sp-num-input');
-  const prev = $('#m-sp-num-preview');
-  if (input) input.value = curNum;
-  if (prev) prev.textContent = `SPRINT ${String(curNum).padStart(2, '0')}`;
-  $$('.sp-num-pre').forEach(btn => btn.classList.toggle('active', +btn.dataset.num === curNum));
-  modal.classList.add('show');
-  if (input) input.focus();
-}
-
-function closeSprintNumModal() {
-  const modal = $('#modal-sprint-num');
-  if (modal) modal.classList.remove('show');
-}
 
 function deleteBlock(index) {
   if (B.length <= 1) return;
@@ -1797,7 +1687,7 @@ const SCN = {
     }
   },
 
-  /* LUNCH: Robot picks burger with hand and takes to mouth */
+  /* LUNCH: transparent burger.webm mascot video */
   lunch: {
     name: 'LUNCH',
     ring: 0,
@@ -1811,11 +1701,9 @@ const SCN = {
       nextInfo(n) +
       `<div class="abs sc" style="left:0;top:940px;width:1920px;height:140px;background:rgba(3,11,40,0.85);border-top:3px solid var(--acc);backdrop-filter:blur(12px)"></div>`,
     play(r, d) {
-      Robot.mountEating('lunch');
+      Robot.mountVideo('burger.webm');
       gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 }).from('.sc', { y: 50, stagger: 0.1, duration: 0.9, ease: 'expo.out' });
       rIn(this.robot, 'left', 1.6, d + 0.2);
-      Robot.idle(d + 1.9);
-      Robot.eat(d + 1.8);
     }
   },
 
@@ -2230,11 +2118,7 @@ function refreshSprintUI() {
     }).join('');
   };
 
-  // Update quick sprint number input on floating bar
-  const qIn = $('#in-sp-num-quick');
-  if (qIn) {
-    qIn.value = String(getCurrentSprintNum()).padStart(2, '0');
-  }
+
 
   renderList('#sp-list');
   renderList('#modal-sp-list');
@@ -2281,16 +2165,7 @@ function initScreenshotBar(togglePanel) {
     }
   };
 
-  // Quick Sprint Stepper on floating bar
-  const btnDec = $('#btn-sp-num-dec');
-  if (btnDec) btnDec.onclick = () => changeSprintNumber(Math.max(1, getCurrentSprintNum() - 1), false);
-  const btnInc = $('#btn-sp-num-inc');
-  if (btnInc) btnInc.onclick = () => changeSprintNumber(getCurrentSprintNum() + 1, false);
-  const quickIn = $('#in-sp-num-quick');
-  if (quickIn) {
-    quickIn.onchange = e => changeSprintNumber(e.target.value, false);
-    quickIn.onkeydown = e => { if (e.key === 'Enter') changeSprintNumber(e.target.value, false); };
-  }
+
 
   // Quick add sprint from bottom toolbar
   $('#btn-add-sp').onclick = () => openSprintModal();
@@ -2298,8 +2173,6 @@ function initScreenshotBar(togglePanel) {
   // Top HUD buttons
   const topAdd = $('#top-btn-add-sprint');
   if (topAdd) topAdd.onclick = () => openSprintModal();
-  const topSpNum = $('#top-btn-sprint-num');
-  if (topSpNum) topSpNum.onclick = () => openSprintNumModal();
   const topCtrl = $('#top-btn-control');
   if (topCtrl) topCtrl.onclick = () => togglePanel();
 
@@ -2345,51 +2218,7 @@ function initScreenshotBar(togglePanel) {
     };
   }
 
-  // Change Sprint Number Modal event bindings
-  const mSpNumClose = $('#modal-spnum-close');
-  if (mSpNumClose) mSpNumClose.onclick = () => closeSprintNumModal();
-  const mSpNumCancel = $('#m-spnum-cancel');
-  if (mSpNumCancel) mSpNumCancel.onclick = () => closeSprintNumModal();
 
-  $$('.sp-num-pre').forEach(btn => {
-    btn.onclick = () => {
-      $$('.sp-num-pre').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const num = +btn.dataset.num;
-      const inp = $('#m-sp-num-input');
-      if (inp) inp.value = num;
-      const prv = $('#m-sp-num-preview');
-      if (prv) prv.textContent = `SPRINT ${String(num).padStart(2, '0')}`;
-    };
-  });
-
-  const spNumInput = $('#m-sp-num-input');
-  if (spNumInput) {
-    spNumInput.oninput = () => {
-      const val = parseInt(spNumInput.value, 10) || 1;
-      const prv = $('#m-sp-num-preview');
-      if (prv) prv.textContent = `SPRINT ${String(val).padStart(2, '0')}`;
-      $$('.sp-num-pre').forEach(b => b.classList.toggle('active', +b.dataset.num === val));
-    };
-  }
-
-  const mSpNumApply = $('#m-spnum-apply');
-  if (mSpNumApply) {
-    mSpNumApply.onclick = () => {
-      const val = $('#m-sp-num-input').value;
-      changeSprintNumber(val, false);
-      closeSprintNumModal();
-    };
-  }
-
-  const mSpNumJump = $('#m-spnum-jump');
-  if (mSpNumJump) {
-    mSpNumJump.onclick = () => {
-      const val = $('#m-sp-num-input').value;
-      changeSprintNumber(val, true);
-      closeSprintNumModal();
-    };
-  }
 
   $('#btn-rs').onclick = () => cmd('reset');
   $('#btn-fs').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen());
@@ -2467,9 +2296,8 @@ if (DISPLAY) {
     if (k === 'f') fs();
     else if (k === 'c') toggle();
     else if (k === 's') openSprintModal();
-    else if (k === 'n') openSprintNumModal();
     else if (k === 'escape') {
-      closeSprintModal(); closeSprintNumModal();
+      closeSprintModal();
       if (cp.style.display === 'block') toggle();
     }
     else if (k === ' ') {
