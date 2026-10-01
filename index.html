@@ -1,0 +1,2512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IDEAX 2026 — Projector Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=JetBrains+Mono:wght@500;700;800&family=Sora:wght@400;600;700&family=Space+Grotesk:wght@500;700&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+  --bg: #02081e;
+  --ink: #f0f8ff;
+  --acc: #5ee1ff;
+  --acc-glow: rgba(94, 225, 255, 0.6);
+  --sig: #5ee1ff;
+  --dim: #8ba5d6;
+  --dark-glass: rgba(3, 11, 40, 0.88);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+html {
+  height: 100%;
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: #02081e;
+  color: var(--ink);
+  overflow: hidden;
+  font-family: 'Space Grotesk', 'Sora', system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+
+#vp {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
+}
+#vp.show-cursor {
+  cursor: default;
+}
+
+#stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1920px;
+  height: 1080px;
+  margin: -540px 0 0 -960px;
+  background: #02081e url('./bg.jpg') center center / cover no-repeat;
+  overflow: hidden;
+  pointer-events: none;
+}
+#stage * {
+  pointer-events: none;
+}
+#stage .pe, #stage .pe * {
+  pointer-events: auto;
+}
+
+.abs { position: absolute; }
+.sc { opacity: 0; }
+.big {
+  font-family: 'Big Shoulders Display', 'Unbounded', Impact, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.tag {
+  font-size: 26px;
+  letter-spacing: 0.35em;
+  color: var(--sig);
+  font-weight: 800;
+  text-shadow: 0 0 20px var(--acc-glow);
+}
+.dim {
+  color: var(--dim);
+  font-size: 24px;
+  letter-spacing: 0.2em;
+  margin-top: 10px;
+}
+.tagl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 38px;
+  letter-spacing: 0.35em;
+  margin-top: 34px;
+  color: #c4dcfc;
+  text-shadow: 0 0 15px rgba(94, 225, 255, 0.3);
+}
+.dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: 0 0 12px var(--acc);
+  margin-right: 14px;
+  animation: bl 1s steps(1) infinite;
+}
+@keyframes bl {
+  50% { opacity: 0.25; }
+}
+
+/* Atmospheric Vignette Veil */
+#vig {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(2, 6, 30, 0.05) 0%, rgba(2, 8, 36, 0.35) 65%, rgba(1, 4, 20, 0.75) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Transparent particle layer for floating stardust */
+#bg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ======================================================== */
+/* COUNTDOWN DISPLAY (High-Contrast Frosted Glass Card)     */
+/* Eliminates character overlapping and ensures visibility  */
+/* ======================================================== */
+#cd {
+  position: absolute;
+  left: 960px;
+  top: 540px;
+  width: 1700px;
+  margin: -260px 0 0 -850px;
+  text-align: center;
+  opacity: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.dg-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 10, 36, 0.85);
+  border: 1.5px solid rgba(94, 225, 255, 0.45);
+  border-radius: 40px;
+  padding: 24px 64px 30px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.88), 0 0 50px rgba(94, 225, 255, 0.22), inset 0 0 35px rgba(94, 225, 255, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  max-width: 95%;
+}
+
+#cdl {
+  font: 800 28px 'JetBrains Mono', monospace;
+  letter-spacing: 0.4em;
+  color: var(--sig);
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px var(--acc-glow);
+  text-transform: uppercase;
+}
+
+.dg {
+  font-family: 'Big Shoulders Display', Impact, sans-serif;
+  font-weight: 900;
+  font-size: 300px;
+  line-height: 0.86;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-shadow: 0 0 35px var(--acc-glow), 0 0 75px rgba(47, 91, 255, 0.45), 0 10px 40px rgba(0, 0, 0, 0.9);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.dg.has-h {
+  font-size: 250px;
+}
+
+.dg span {
+  display: inline-block;
+  min-width: 0.58em;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.dg .c {
+  display: inline-block;
+  min-width: 0.32em;
+  text-align: center;
+  color: var(--acc);
+  text-shadow: 0 0 25px var(--acc);
+  animation: bl 1s steps(1) infinite;
+  flex: 0 0 auto;
+}
+
+#cd.warn .dg {
+  color: #ffd166;
+  text-shadow: 0 0 50px rgba(255, 209, 102, 0.6), 0 10px 40px rgba(0, 0, 0, 0.9);
+}
+
+#cd.crit .dg {
+  color: #ff4d6d;
+  animation: pl 1s infinite alternate;
+}
+
+@keyframes pl {
+  to {
+    transform: scale(1.03);
+    text-shadow: 0 0 80px rgba(255, 77, 109, 0.85), 0 10px 40px rgba(0, 0, 0, 0.95);
+  }
+}
+
+.bar {
+  width: 100%;
+  max-width: 880px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  margin: 22px auto 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #1d4ed8, #5ee1ff);
+  box-shadow: 0 0 16px #5ee1ff;
+  transform-origin: 0 50%;
+  border-radius: 8px;
+}
+
+/* ======================================================== */
+/* ROBOT MASCOT CONTAINER                                   */
+/* ======================================================== */
+#robot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 480px;
+  height: 480px;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  z-index: 7;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 35px rgba(94, 225, 255, 0.4));
+  pointer-events: none;
+}
+
+#robot-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+
+#robot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+#robot-glow {
+  position: absolute;
+  left: 20px;
+  top: 140px;
+  width: 200px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94, 225, 255, 0.45) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(12px);
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+}
+
+/* HUD frame and labels */
+.hud {
+  position: absolute;
+  z-index: 8;
+  font: 700 16px 'JetBrains Mono', monospace;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+}
+/* 48-hour event countdown (shown on every scene) */
+#gcd {
+  position: absolute;
+  left: 960px;
+  top: 26px;
+  transform: translateX(-50%);
+  z-index: 41;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 24px;
+  border-radius: 24px;
+  background: rgba(3, 11, 40, 0.78);
+  border: 1.5px solid rgba(94, 225, 255, 0.45);
+  box-shadow: 0 0 22px rgba(94, 225, 255, 0.2);
+  backdrop-filter: blur(10px);
+  font: 800 28px 'JetBrains Mono', monospace;
+  letter-spacing: 0.06em;
+  color: #fff;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#gcd .gl {
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  color: var(--acc);
+}
+#gcd.idle #gcdv { opacity: 0.6; }
+.br {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(94, 225, 255, 0.35);
+  z-index: 8;
+}
+
+/* Transition Banner */
+#sw {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: none;
+  overflow: hidden;
+}
+#sw .b {
+  position: absolute;
+  top: -10%;
+  height: 120%;
+  left: -15%;
+  width: 130%;
+}
+#sw .lab {
+  position: absolute;
+  left: 170px;
+  top: 440px;
+  font: 900 140px 'Big Shoulders Display', Impact, sans-serif;
+  color: #02081e;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+#fl {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  z-index: 10;
+}
+
+/* Interactive Start Button */
+.ring {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin: -20px;
+  border: 6px solid var(--acc);
+  border-radius: 50%;
+  z-index: 7;
+}
+.btn {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #7de8ff, #2fb6ff);
+  color: #020d2c;
+  border-radius: 20px;
+  font: 900 70px/110px 'Big Shoulders Display', Impact, sans-serif;
+  text-align: center;
+  letter-spacing: 0.08em;
+  box-shadow: 0 8px 0 #1240a0, 0 0 60px var(--acc-glow);
+}
+
+/* Steam animation */
+.stm {
+  animation: stmMove 1.8s infinite ease-in-out;
+}
+@keyframes stmMove {
+  0% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(-8px); opacity: 0.4; }
+  100% { transform: translateY(-16px); opacity: 0; }
+}
+
+.cf {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 22px;
+}
+
+#hint {
+  position: fixed;
+  right: calc(14px + env(safe-area-inset-right,0px));
+  bottom: calc(14px + env(safe-area-inset-bottom,0px));
+  z-index: 45;
+  font: 600 12px 'JetBrains Mono', monospace;
+  color: #c4dcfc;
+  background: rgba(3, 11, 40, 0.85);
+  border: 1px solid rgba(94, 225, 255, 0.35);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: opacity 1s;
+  letter-spacing: 0.1em;
+  backdrop-filter: blur(8px);
+}
+
+/* Control Panel (Drawer) */
+.cp {
+  position: fixed;
+  z-index: 60;
+  background: rgba(3, 11, 40, 0.96);
+  color: var(--ink);
+  font: 500 13.5px 'JetBrains Mono', monospace;
+  padding: 18px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  cursor: default;
+  user-select: auto;
+  -webkit-user-select: auto;
+  box-sizing: border-box;
+  backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(94, 225, 255, 0.4);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7);
+}
+.cp.ov {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 420px;
+  border-left: 2px solid var(--acc);
+  border-right: 0;
+  border-top: 0;
+  border-bottom: 0;
+  display: none;
+}
+.cp.full {
+  inset: 0;
+  max-width: 660px;
+  margin: 0 auto;
+}
+@media(max-width:700px){
+  .cp.ov { top: auto; width: 100%; height: 60%; border-left: 0; border-top: 2px solid var(--acc); }
+}
+.cp h2 {
+  margin: 0 0 6px;
+  font: 800 24px 'Big Shoulders Display', Impact, sans-serif;
+  letter-spacing: 0.05em;
+  color: var(--acc);
+}
+.cp .g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.cp button {
+  background: #0f2b82;
+  color: var(--ink);
+  border: 1px solid #365bbb;
+  border-radius: 8px;
+  padding: 10px 8px;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+}
+.cp button:hover {
+  background: #1946d6;
+  border-color: var(--acc);
+}
+.cp button.on {
+  background: var(--acc);
+  color: #02081e;
+  border-color: var(--acc);
+  box-shadow: 0 0 12px rgba(94, 225, 255, 0.4);
+}
+.cp input[type=text], .cp textarea, .cp select {
+  width: 100%;
+  box-sizing: border-box;
+  background: #02091f;
+  color: var(--ink);
+  border: 1px solid #365bbb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  margin: 4px 0;
+}
+.cp .rd {
+  font: 900 58px 'Big Shoulders Display', Impact, sans-serif;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow: 0 0 25px var(--acc-glow);
+}
+.cp .r { display: flex; gap: 6px; margin: 8px 0; }
+.cp .r > * { flex: 1; }
+.cp small { color: var(--dim); font-size: 11.5px; }
+.cp .ok { color: var(--sig); }
+
+/* Schedule block item in manager */
+.sp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  margin: 4px 0;
+  background: rgba(8, 20, 60, 0.65);
+  border: 1px solid rgba(94, 225, 255, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.sp-item.active {
+  border-color: var(--acc);
+  background: rgba(15, 43, 130, 0.7);
+}
+.sp-item .btn-sm {
+  padding: 3px 8px;
+  font-size: 10.5px;
+  margin-left: 4px;
+}
+
+/* Bottom Quick-Control Bar (Appears on Hover) */
+#ctl-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 85px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  z-index: 55;
+  pointer-events: none;
+}
+
+#ctl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(3, 11, 40, 0.88);
+  border: 1.5px solid rgba(94, 225, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(94, 225, 255, 0.08);
+  backdrop-filter: blur(14px);
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#ctl-wrap:hover #ctl,
+#ctl:hover,
+#ctl.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#ctl button,
+#ctl select {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  height: 36px;
+  padding: 0 13px;
+  color: #ffffff;
+  background: #0f2b82;
+  border: 1px solid #365bbb;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+#ctl button:hover,
+#ctl select:hover {
+  background: #1946d6;
+  border-color: #5ee1ff;
+  box-shadow: 0 0 14px rgba(94, 225, 255, 0.4);
+}
+
+#ctl select {
+  padding-right: 26px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%235ee1ff' d='M5 7L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  min-width: 140px;
+}
+
+#ctl .btn-icon {
+  width: 36px;
+  padding: 0;
+  font-size: 14px;
+}
+
+#ctl .btn-more {
+  border-left: 2px solid rgba(94, 225, 255, 0.35);
+  margin-left: 4px;
+  padding-left: 14px;
+}
+
+/* Top HUD Action Buttons */
+.hud-pill-btn {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(15, 43, 130, 0.88);
+  border: 1.5px solid rgba(94, 225, 255, 0.5);
+  border-radius: 20px;
+  padding: 6px 18px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 14px rgba(94, 225, 255, 0.25);
+  transition: all 0.2s ease;
+  pointer-events: auto !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.hud-pill-btn:hover {
+  background: #1d4ed8;
+  border-color: #5ee1ff;
+  box-shadow: 0 0 25px rgba(94, 225, 255, 0.7);
+  transform: translateY(-2px);
+}
+.hud-pill-btn.accent {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border-color: #7dd3fc;
+}
+
+/* Add Sprint Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(1, 6, 24, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal-card {
+  width: 560px;
+  max-width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(3, 12, 42, 0.96);
+  border: 1.5px solid rgba(94, 225, 255, 0.5);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(94, 225, 255, 0.3);
+  border-radius: 22px;
+  padding: 26px 30px;
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.25s ease;
+  color: #f0f8ff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+.modal-backdrop.show .modal-card {
+  transform: translateY(0) scale(1);
+}
+.modal-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(94, 225, 255, 0.25);
+  padding-bottom: 12px;
+}
+.modal-title {
+  font-family: 'Big Shoulders Display', Impact, sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #5ee1ff;
+  text-shadow: 0 0 16px rgba(94, 225, 255, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: #8ba5d6;
+  font-size: 26px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #5ee1ff;
+  margin-bottom: 6px;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  box-sizing: border-box;
+  background: #020922;
+  border: 1px solid #2a4c9c;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: #5ee1ff;
+  box-shadow: 0 0 12px rgba(94, 225, 255, 0.45);
+}
+.preset-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.preset-row button {
+  background: #0d2366;
+  border: 1px solid #254baf;
+  color: #c4dcfc;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.preset-row button:hover, .preset-row button.active {
+  background: #1d4ed8;
+  border-color: #5ee1ff;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(94, 225, 255, 0.45);
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.modal-actions button {
+  flex: 1;
+  padding: 12px 10px;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-primary {
+  background: #1d4ed8;
+  color: #fff;
+  border: 1.5px solid #5ee1ff;
+  box-shadow: 0 0 15px rgba(94, 225, 255, 0.3);
+}
+.btn-primary:hover {
+  background: #2563eb;
+  box-shadow: 0 0 25px rgba(94, 225, 255, 0.6);
+}
+.btn-accent {
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
+  color: #02081e;
+  border: none;
+  font-weight: 900;
+  box-shadow: 0 0 15px rgba(0, 198, 255, 0.4);
+}
+.btn-accent:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 25px rgba(0, 198, 255, 0.7);
+}
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: #8ba5d6;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* Toast notification */
+#toast {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px);
+  background: rgba(3, 14, 48, 0.95);
+  border: 1.5px solid var(--acc);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 25px var(--acc-glow);
+  backdrop-filter: blur(16px);
+  color: #ffffff;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 10px 24px;
+  border-radius: 30px;
+  z-index: 120;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div id="vp">
+  <div id="stage">
+    <canvas id="bg" width="1920" height="1080" class="abs" style="left:0;top:0"></canvas>
+    <div id="robot"></div>
+    <div id="scene"></div>
+
+    <div id="cd">
+      <div class="dg-card">
+        <div id="cdl"></div>
+        <div class="dg" id="cdd"></div>
+        <div class="bar"><i id="cdb"></i></div>
+      </div>
+    </div>
+
+    <div id="vig"></div>
+
+    <!-- Top HUD & Actions -->
+    <div class="hud" style="left:60px;top:34px"><span class="dot"></span>IDEAX 2026 · PROJECTOR · LIVE</div>
+    <div class="pe" style="position:absolute; right:60px; top:28px; z-index:40; display:flex; gap:12px;">
+      <button id="top-btn-add-sprint" class="hud-pill-btn accent">⚡ + ADD SPRINT</button>
+      <button id="top-btn-sprint-num" class="hud-pill-btn">🔢 SPRINT #</button>
+      <button id="top-btn-control" class="hud-pill-btn">⚙ CONTROL</button>
+    </div>
+    <div id="gcd" class="idle"><span class="gl">48H EVENT</span><span id="gcdv">48:00:00</span></div>
+    <div class="hud" style="right:60px;bottom:32px;opacity:.65">BUILD • CREATE • COMPETE</div>
+    <i class="br" style="left:24px;top:24px;border-right:0;border-bottom:0"></i>
+    <i class="br" style="right:24px;top:24px;border-left:0;border-bottom:0"></i>
+    <i class="br" style="left:24px;bottom:24px;border-right:0;border-top:0"></i>
+    <i class="br" style="right:24px;bottom:24px;border-left:0;border-top:0"></i>
+
+    <div id="sw">
+      <div class="b b1" style="background:#5ee1ff"></div>
+      <div class="b b2" style="background:#1d4ed8"></div>
+      <div class="lab mono"></div>
+    </div>
+
+    <div id="fl"></div>
+  </div>
+</div>
+
+<!-- Modal: Add Sprint -->
+<div id="modal-sprint" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-hdr">
+      <div class="modal-title">⚡ ADD SPRINT TO SCHEDULE</div>
+      <button class="modal-close" id="modal-sp-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>SPRINT TITLE</label>
+        <input type="text" id="m-sp-label" placeholder="e.g. SPRINT 04" value="SPRINT 04">
+      </div>
+      <div class="form-group">
+        <label>SUBTITLE / PHASE</label>
+        <input type="text" id="m-sp-sub" placeholder="e.g. DAY 2 · FINAL BUILD" value="DAY 2 · BUILD">
+      </div>
+      <div class="form-group">
+        <label>DURATION PRESETS</label>
+        <div class="preset-row">
+          <button type="button" class="sp-pre" data-sec="1800">30m</button>
+          <button type="button" class="sp-pre" data-sec="3600">1h</button>
+          <button type="button" class="sp-pre" data-sec="5400">1.5h</button>
+          <button type="button" class="sp-pre active" data-sec="7200">2h</button>
+          <button type="button" class="sp-pre" data-sec="10800">3h</button>
+          <button type="button" class="sp-pre" data-sec="14400">4h</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>CUSTOM DURATION (HH:MM:SS)</label>
+        <input type="text" id="m-sp-dur" placeholder="02:00:00" value="02:00:00">
+      </div>
+      <div class="form-group">
+        <label>INSERTION POINT</label>
+        <select id="m-sp-pos">
+          <option value="before-closing">Before Closing / Final Sprint (Recommended)</option>
+          <option value="after-current">Immediately After Current Sprint</option>
+          <option value="at-end">At the End of Schedule</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button id="m-sp-submit" class="btn-primary">➕ ADD SPRINT</button>
+        <button id="m-sp-submit-jump" class="btn-accent">🚀 ADD & JUMP NOW</button>
+        <button id="m-sp-cancel" class="btn-ghost">CANCEL</button>
+      </div>
+
+      <!-- Schedule Preview in Modal -->
+      <div style="margin-top:20px; border-top:1px dashed rgba(94,225,255,0.25); padding-top:14px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:var(--dim); margin-bottom:8px">CURRENT SCHEDULE BLOCKS</div>
+        <div id="modal-sp-list" style="max-height:140px; overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Change Sprint Number -->
+<div id="modal-sprint-num" class="modal-backdrop">
+  <div class="modal-card" style="width:480px">
+    <div class="modal-hdr">
+      <div class="modal-title">🔢 CHANGE SPRINT NUMBER</div>
+      <button class="modal-close" id="modal-spnum-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>QUICK SELECT SPRINT</label>
+        <div class="preset-row" style="grid-template-columns: repeat(5, 1fr)">
+          <button type="button" class="sp-num-pre" data-num="1">Sprint 1</button>
+          <button type="button" class="sp-num-pre" data-num="2">Sprint 2</button>
+          <button type="button" class="sp-num-pre" data-num="3">Sprint 3</button>
+          <button type="button" class="sp-num-pre" data-num="4">Sprint 4</button>
+          <button type="button" class="sp-num-pre" data-num="5">Sprint 5</button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>ENTER SPRINT NUMBER (1 - 99)</label>
+        <div style="display:flex; gap:12px; align-items:center">
+          <input type="number" id="m-sp-num-input" min="1" max="99" value="1" style="font-size:22px; font-weight:900; text-align:center; flex:1">
+          <div id="m-sp-num-preview" style="font-family:'Big Shoulders Display',Impact,sans-serif; font-size:32px; color:var(--acc); font-weight:900; min-width:140px; text-align:center">SPRINT 01</div>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:24px">
+        <button id="m-spnum-apply" class="btn-primary">✓ SET SPRINT NUMBER</button>
+        <button id="m-spnum-jump" class="btn-accent">🚀 SET & SWITCH</button>
+        <button id="m-spnum-cancel" class="btn-ghost">CANCEL</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification badge -->
+<div id="toast"></div>
+
+<!-- Bottom Quick Controls Bar -->
+<div id="ctl-wrap">
+  <div id="ctl">
+    <button class="btn-icon" id="btn-pv" title="Previous Block">◀</button>
+    <select id="ctl-sel"></select>
+    <button class="btn-icon" id="btn-nx" title="Next Block">▶</button>
+    <!-- Quick Sprint Number Stepper -->
+    <div id="sp-quick-stepper" title="Current Sprint Number" style="display:flex;align-items:center;background:#0d2366;border:1px solid #3b82f6;border-radius:8px;padding:0 6px;height:36px">
+      <span style="font-size:11px;color:var(--dim);margin:0 4px;font-family:'JetBrains Mono',monospace;font-weight:700">SPRINT</span>
+      <button id="btn-sp-num-dec" style="width:24px;height:24px;padding:0;font-size:13px;background:none;border:none;color:#5ee1ff;cursor:pointer" title="Previous Sprint Number">◀</button>
+      <input id="in-sp-num-quick" type="text" value="01" style="width:36px;height:26px;text-align:center;font-weight:900;background:none;border:none;color:#ffffff;font-size:15px;font-family:'Space Grotesk',sans-serif" title="Edit Sprint Number">
+      <button id="btn-sp-num-inc" style="width:24px;height:24px;padding:0;font-size:13px;background:none;border:none;color:#5ee1ff;cursor:pointer" title="Next Sprint Number">▶</button>
+    </div>
+    <button id="btn-pp">Pause</button>
+    <button id="btn-m5">−5 min</button>
+    <button id="btn-p5">+5 min</button>
+    <button id="btn-add-sp" style="background:#1d4ed8;border-color:#5ee1ff" title="Quick Add Sprint">+ Sprint</button>
+    <button id="btn-g5m" title="48h countdown −5 min (key -)">48H −5</button>
+    <button id="btn-g5p" title="48h countdown +5 min (key +)">48H +5</button>
+    <button id="btn-rs">Reset</button>
+    <button id="btn-fs">Fullscreen</button>
+    <button class="btn-more" id="btn-more">⚙ Control Panel</button>
+  </div>
+</div>
+
+<button id="hint">CONTROL ▸ · F fullscreen · 1–9 blocks · 0 closing · − / + 48h ±5m</button>
+
+<script>
+/* ============ schedule.ts (Exact Timings & Block Definitions) ============ */
+const SCHEDULE = {
+  placeholder: true,
+  event: { name: 'IDEAX 2026', tagline: 'BUILD • CREATE • COMPETE' },
+  blocks: [
+    { state: 'welcome', label: 'WELCOME' },
+    { state: 'opening', label: 'OPENING' },
+    { state: 'development', label: 'SPRINT 01', sub: 'DAY 1 · BUILD', sec: 2 * 3600 },
+    { state: 'breakfast', label: 'BREAKFAST', sec: 45 * 60 },
+    { state: 'development', label: 'SPRINT 02', sub: 'DAY 1 · BUILD', sec: 3.5 * 3600 },
+    { state: 'lunch', label: 'LUNCH', sec: 3600 },
+    { state: 'development', label: 'SPRINT 03', sub: 'DAY 2 · BUILD', sec: 4 * 3600 },
+    { state: 'dinner', label: 'DINNER', sec: 3600 },
+    { state: 'development', label: 'FINAL SPRINT', sub: 'DAY 3 · SHIP IT', sec: 2 * 3600 },
+    { state: 'closing', label: 'CLOSING', sec: 8 }
+  ]
+};
+const MODES = ['welcome', 'opening', 'development', 'breakfast', 'lunch', 'dinner', 'announcement', 'closing'];
+
+/* ========================================================================= */
+/* ROBOT MASCOT (Supports exact 3D render & hand-picking eating animation)   */
+/* ========================================================================= */
+const Robot = {
+  mode: '3d',
+  mount3D() {
+    this.mode = '3d';
+    $('#robot').innerHTML = `
+      <div id="robot-wrap">
+        <div id="robot-glow"></div>
+        <img id="robot-img" src="./mascot-clean.png" alt="IdeaX Mascot" draggable="false">
+      </div>
+    `;
+    this.rest();
+  },
+  mountEating(foodType) {
+    this.mode = 'eating';
+    let plateFoodSvg = '';
+    let handFoodSvg = '';
+    let sideDrinkSvg = '';
+
+    if (foodType === 'lunch') {
+      sideDrinkSvg = `
+        <!-- Cold Soda Drink with Straw -->
+        <g id="side-drink">
+          <polygon points="418,290 448,290 442,342 424,342" fill="#1d4ed8" stroke="#5ee1ff" stroke-width="1.5"/>
+          <rect x="415" y="286" width="36" height="6" rx="2" fill="#ffffff"/>
+          <line x1="433" y1="286" x2="445" y2="256" stroke="#5ee1ff" stroke-width="3.5" stroke-linecap="round"/>
+          <text x="433" y="320" text-anchor="middle" font-size="11" font-family="'JetBrains Mono', monospace" font-weight="900" fill="#ffffff">X</text>
+        </g>
+      `;
+      plateFoodSvg = `
+        <!-- Gourmet Double Burger on Plate -->
+        <g id="plate-food" transform="translate(360, 330)">
+          <path d="M -40 -14 Q 8 -48 56 -14 Z" fill="#e6a04a" stroke="#d98b3a" stroke-width="2"/>
+          <ellipse cx="-10" cy="-28" rx="2.5" ry="1.2" fill="#fdf2d2"/><ellipse cx="10" cy="-35" rx="2.5" ry="1.2" fill="#fdf2d2"/><ellipse cx="28" cy="-28" rx="2.5" ry="1.2" fill="#fdf2d2"/>
+          <rect x="-36" y="-12" width="88" height="8" rx="2" fill="#e63946"/>
+          <path d="M -40 -4 H 56 L 44 7 L 30 -4 L 16 9 L 0 -4 L -16 7 L -28 -4 Z" fill="#ffc93c"/>
+          <rect x="-38" y="2" width="94" height="15" rx="5" fill="#4a2810"/>
+          <path d="M -42 16 Q -26 24 -10 16 Q 6 24 22 16 Q 38 24 52 16" fill="none" stroke="#52b740" stroke-width="7" stroke-linecap="round"/>
+          <path d="M -36 19 H 52 Q 52 34 8 34 Q -36 34 -36 19 Z" fill="#d98b3a"/>
+        </g>
+      `;
+      handFoodSvg = `
+        <!-- Gourmet Burger Held in Fingers -->
+        <g id="hand-food" style="opacity:0" transform="translate(0, 0) rotate(-14)">
+          <path d="M -40 -14 Q 8 -48 56 -14 Z" fill="#e6a04a" stroke="#d98b3a" stroke-width="2"/>
+          <ellipse cx="-10" cy="-28" rx="2.5" ry="1.2" fill="#fdf2d2"/><ellipse cx="10" cy="-35" rx="2.5" ry="1.2" fill="#fdf2d2"/><ellipse cx="28" cy="-28" rx="2.5" ry="1.2" fill="#fdf2d2"/>
+          <rect x="-36" y="-12" width="88" height="8" rx="2" fill="#e63946"/>
+          <path d="M -40 -4 H 56 L 44 7 L 30 -4 L 16 9 L 0 -4 L -16 7 L -28 -4 Z" fill="#ffc93c"/>
+          <rect x="-38" y="2" width="94" height="15" rx="5" fill="#4a2810"/>
+          <path d="M -42 16 Q -26 24 -10 16 Q 6 24 22 16 Q 38 24 52 16" fill="none" stroke="#52b740" stroke-width="7" stroke-linecap="round"/>
+          <path d="M -36 19 H 52 Q 52 34 8 34 Q -36 34 -36 19 Z" fill="#d98b3a"/>
+        </g>
+      `;
+    }
+
+    $('#robot').innerHTML = `
+      <svg viewBox="0 0 480 440" width="480" height="440" style="overflow:visible">
+        <defs>
+          <linearGradient id="eatHeadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#e2e8f5"/>
+          </linearGradient>
+          <linearGradient id="eatSuitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#1d4ed8"/>
+          </linearGradient>
+          <linearGradient id="eatPantsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#f59e42"/>
+            <stop offset="100%" stop-color="#d97724"/>
+          </linearGradient>
+          <filter id="eatCyanGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <g class="jmp"><g class="bob">
+          <!-- Table Surface Counter -->
+          <rect x="240" y="348" width="230" height="8" rx="4" fill="#0d2875" stroke="#5ee1ff" stroke-width="1.5"/>
+
+          <!-- Plate on Table Surface -->
+          <ellipse cx="360" cy="342" rx="60" ry="15" fill="rgba(94, 225, 255, 0.18)" stroke="#5ee1ff" stroke-width="2"/>
+          <ellipse cx="360" cy="340" rx="48" ry="10" fill="rgba(255, 255, 255, 0.12)"/>
+
+          <!-- Side Drink (Coffee / Soda / Tea) -->
+          ${sideDrinkSvg}
+
+          <!-- Food Resting on the Plate -->
+          ${plateFoodSvg}
+
+          <!-- Robot Mascot Legs (Warm orange-tan matching photo) -->
+          <g class="lL">
+            <path d="M 128 290 Q 120 336 128 364 Q 148 372 166 364 Q 172 331 166 290 Z" fill="url(#eatPantsGrad)"/>
+          </g>
+          <g class="lR">
+            <path d="M 194 290 Q 188 331 194 364 Q 212 372 232 364 Q 240 336 232 290 Z" fill="url(#eatPantsGrad)"/>
+          </g>
+
+          <!-- Robot Body: Blue Suit with Glowing X Logo -->
+          <path d="M 108 180 C 108 180, 100 290, 180 290 C 260 290, 252 180, 252 180 Z" fill="url(#eatSuitGrad)"/>
+          <g filter="url(#eatCyanGlow)">
+            <path d="M 164 215 L 196 251 M 196 215 L 164 251" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+            <path d="M 164 215 L 196 251 M 196 215 L 164 251" stroke="#5ee1ff" stroke-width="4" stroke-linecap="round"/>
+          </g>
+
+          <!-- Left Arm -->
+          <g class="aL">
+            <path d="M 92 190 Q 68 245 94 290" fill="none" stroke="url(#eatSuitGrad)" stroke-width="32" stroke-linecap="round"/>
+            <circle cx="94" cy="290" r="16" fill="#1d4ed8"/>
+          </g>
+
+          <!-- Head Structure -->
+          <g class="head">
+            <circle cx="180" cy="115" r="76" fill="url(#eatHeadGrad)"/>
+            <ellipse cx="180" cy="61" rx="46" ry="18" fill="rgba(255,255,255,0.45)"/>
+            <g class="earL">
+              <rect x="96" y="95" width="16" height="42" rx="8" fill="#1d4ed8"/>
+              <ellipse cx="100" cy="116" rx="6" ry="15" fill="#3b82f6"/>
+              <path d="M 104 95 Q 115 75 130 65" stroke="#1d4ed8" stroke-width="6" fill="none" stroke-linecap="round"/>
+            </g>
+            <g class="earR">
+              <rect x="248" y="95" width="16" height="42" rx="8" fill="#1d4ed8"/>
+              <ellipse cx="260" cy="116" rx="6" ry="15" fill="#3b82f6"/>
+              <path d="M 256 95 Q 245 75 230 65" stroke="#1d4ed8" stroke-width="6" fill="none" stroke-linecap="round"/>
+            </g>
+            <!-- Visor with neon cyan outline -->
+            <path d="M 124 85 C 145 75, 215 75, 236 85 C 255 95, 255 133, 236 143 C 215 153, 145 153, 124 143 C 105 133, 105 95, 124 85 Z" 
+                  fill="#060f2e" stroke="#00e5ff" stroke-width="4.5" filter="url(#eatCyanGlow)"/>
+            <path d="M 132 91 Q 180 83 228 91 Q 180 99 132 91" fill="rgba(255,255,255,0.22)"/>
+            <g class="eyes" filter="url(#eatCyanGlow)">
+              <path class="eye eyeL" d="M 138 119 Q 153 97 168 119" fill="none" stroke="#5ee1ff" stroke-width="9" stroke-linecap="round"/>
+              <path class="eye eyeR" d="M 192 119 Q 207 97 222 119" fill="none" stroke="#5ee1ff" stroke-width="9" stroke-linecap="round"/>
+            </g>
+            <!-- Open cheerful mouth with tongue -->
+            <path class="mo" d="M 164 155 Q 180 181 196 155 Z" fill="#04081c"/>
+            <path d="M 172 165 Q 180 175 188 165 Z" fill="#ff4d6d"/>
+          </g>
+
+          <!-- Articulated Right Arm & Hand: Shoulder (248, 195) -> Hand (hx, hy) -->
+          <path id="robot-arm" d="M 248 195 Q 320 255 360 332" fill="none" stroke="url(#eatSuitGrad)" stroke-width="32" stroke-linecap="round"/>
+          <g id="hand-grp" transform="translate(360, 332)">
+            <circle cx="0" cy="0" r="18" fill="#1d4ed8"/>
+            <path d="M -8 -4 Q 0 8 10 -4" fill="none" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
+            ${handFoodSvg}
+          </g>
+        </g></g>
+      </svg>
+    `;
+    gsap.set('#robot .head', { svgOrigin: '180 115' });
+    gsap.set('#robot .mo', { transformOrigin: '50% 50%' });
+    gsap.set('#robot .eyes', { transformOrigin: '50% 50%' });
+  },
+  /* Plays a looping transparent-background video of the mascot (burger.webm / noodels.webm) */
+  mountVideo(src) {
+    this.mode = 'video';
+    $('#robot').innerHTML = `
+      <video id="robot-video" src="${src}" autoplay loop muted playsinline preload="auto" disablepictureinpicture
+        style="position:absolute;left:50%;bottom:0;height:400px;width:auto;transform:translateX(-50%);display:block;pointer-events:none;background:transparent;-webkit-mask-image:linear-gradient(to bottom,#000 86%,transparent 100%);mask-image:linear-gradient(to bottom,#000 86%,transparent 100%)"></video>
+    `;
+    const v = $('#robot-video');
+    v.muted = true;
+    const p = v.play();
+    p && p.catch && p.catch(() => {});
+  },
+  rest() {
+    gsap.killTweensOf('#robot,#robot-wrap, #robot-img, #robot-glow, #robot #r-upper, #robot #r-forearm, #robot #robot-arm, #robot #hand-grp, #robot #plate-food, #robot #hand-food, #robot .aR, #robot .head, #robot .mo, #robot .eyes, #robot .bob');
+    gsap.set('#robot-wrap', { rotation: 0, y: 0, scale: 1 });
+    gsap.set('#robot-img', { rotation: 0, scale: 1 });
+  },
+  idle(d = 0) {
+    if (this.mode === '3d') {
+      gsap.to('#robot-wrap', { y: -12, duration: 1.5, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: d });
+      gsap.to('#robot-glow', { opacity: 0.4, duration: 0.5, yoyo: true, repeat: -1, ease: 'power1.inOut' });
+    } else {
+      gsap.to('#robot .bob', { y: -8, duration: 1.4, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: d });
+    }
+  },
+  walk(sec, d = 0) {
+    const n = Math.ceil(sec / 0.5) * 2 - 1;
+    gsap.fromTo('#robot', { rotation: -3.5 }, { rotation: 3.5, duration: 0.25, yoyo: true, repeat: n, ease: 'sine.inOut', delay: d });
+  },
+  look(deg, d = 0) {
+    gsap.to(this.mode === '3d' ? '#robot-wrap' : '#robot .head', { rotation: deg, duration: 0.6, ease: 'power2.inOut', delay: d });
+  },
+  type() {
+    return gsap.timeline({ repeat: -1 })
+      .to('#robot-img', { rotation: 0.8, scale: 1.01, duration: 0.14, yoyo: true, repeat: 1, ease: 'power1.inOut' })
+      .to('#robot-img', { rotation: -0.8, scale: 1.01, duration: 0.14, yoyo: true, repeat: 1, ease: 'power1.inOut' });
+  },
+  react() {
+    return gsap.timeline()
+      .to('#robot', { y: -70, scale: 1.08, duration: 0.24, yoyo: true, repeat: 1, ease: 'power2.out' });
+  },
+  cheer() {
+    return gsap.timeline({ repeat: -1 })
+      .to('#robot', { y: -50, scale: 1.06, duration: 0.28, ease: 'power2.out' })
+      .to('#robot', { y: 0, scale: 1, duration: 0.34, ease: 'bounce.out' });
+  },
+  eat(d = 0) {
+    const armObj = { hx: 360, hy: 332, ex: 320, ey: 255 };
+    const updateArm = () => {
+      const arm = document.querySelector('#robot #robot-arm');
+      const hand = document.querySelector('#robot #hand-grp');
+      if (arm) arm.setAttribute('d', `M 248 195 Q ${armObj.ex} ${armObj.ey} ${armObj.hx} ${armObj.hy}`);
+      if (hand) hand.setAttribute('transform', `translate(${armObj.hx}, ${armObj.hy})`);
+    };
+
+    return gsap.timeline({ delay: d, repeat: -1, repeatDelay: 0.9 })
+      .set(armObj, { hx: 360, hy: 332, ex: 320, ey: 255, onUpdate: updateArm })
+      .set('#robot #plate-food', { opacity: 1 })
+      .set('#robot #hand-food', { opacity: 0 })
+      .set('#robot .head', { rotation: 0, y: 0 })
+      .set('#robot .mo', { scaleY: 1, scaleX: 1 })
+      .set('#robot .eyes', { scaleY: 1 })
+      .to(armObj, { hx: 360, hy: 338, ex: 325, ey: 260, duration: 0.35, ease: 'power1.inOut', onUpdate: updateArm })
+      .to('#robot .head', { rotation: 5, y: 3, duration: 0.35, ease: 'power1.inOut' }, '<')
+      .set('#robot #plate-food', { opacity: 0 })
+      .set('#robot #hand-food', { opacity: 1 })
+      .to('#robot #hand-grp', { scale: 1.08, duration: 0.1, yoyo: true, repeat: 1 })
+      .to(armObj, { hx: 188, hy: 172, ex: 245, ey: 220, duration: 0.95, ease: 'power2.inOut', onUpdate: updateArm })
+      .to('#robot .head', { rotation: -5, y: -2, duration: 0.95, ease: 'power2.inOut' }, '<')
+      .to('#robot .mo', { scaleY: 1.6, scaleX: 1.3, duration: 0.22, ease: 'back.out(2)' }, '-=0.28')
+      .to('#robot .eyes', { scaleY: 0.25, duration: 0.15, yoyo: true, repeat: 1 }, '<')
+      .to('#robot .head', { rotation: -8, y: -5, duration: 0.22, yoyo: true, repeat: 3, ease: 'sine.inOut' })
+      .to('#robot .mo', { scaleY: 0.7, scaleX: 1.15, duration: 0.18, yoyo: true, repeat: 3, ease: 'sine.inOut' }, '<')
+      .to({}, { duration: 0.6 })
+      .to('#robot .mo', { scaleY: 1, scaleX: 1, duration: 0.25 }, 'ret')
+      .to('#robot .head', { rotation: 0, y: 0, duration: 0.35 }, 'ret')
+      .to(armObj, { hx: 360, hy: 332, ex: 320, ey: 255, duration: 0.9, ease: 'power2.inOut', onUpdate: updateArm }, 'ret')
+      .set('#robot #hand-food', { opacity: 0 })
+      .set('#robot #plate-food', { opacity: 1 });
+  }
+};
+
+/* ============ store: event data → display state (mock, local + BroadcastChannel) ============ */
+const $ = s => document.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const sp = t => [...t].map(c => `<span class="ch" style="display:inline-block">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+const B = SCHEDULE.blocks;
+const DISPLAY = !/control/.test(location.hash + location.search);
+
+let S = { mode: 'welcome', prev: 'welcome', idx: 0, t: { dur: 0, run: false, dl: 0, rem: 0 }, ann: { title: '', msg: '' }, rev: 0, auto: false };
+
+// Restore state & custom schedule blocks from localStorage
+try {
+  const s = JSON.parse(localStorage.getItem('ideax-state'));
+  if (s && s.t) S = s;
+  if (s && s.blocks && Array.isArray(s.blocks) && s.blocks.length) {
+    SCHEDULE.blocks.length = 0;
+    SCHEDULE.blocks.push(...s.blocks);
+  }
+} catch (e) {}
+
+/* 48-hour event countdown: starts the first time we leave the welcome page */
+const G_MS = 48 * 3600 * 1000;
+if (!S.g) S.g = { started: false, run: false, dl: 0, rem: G_MS };
+const gRem = () => {
+  const g = S.g || { run: false, rem: G_MS };
+  return g.run ? Math.max(0, g.dl - Date.now()) : g.rem;
+};
+const gAdd = ms => {
+  if (!S.g) S.g = { started: false, run: false, dl: 0, rem: G_MS };
+  const r = Math.max(0, gRem() + ms);
+  S.g.rem = r;
+  if (S.g.run) S.g.dl = Date.now() + r;
+  commit();
+};
+const fmtHMS = ms => {
+  const s = Math.ceil(ms / 1000), p = n => String(n).padStart(2, '0');
+  return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+};
+
+let ch = null;
+try { ch = new BroadcastChannel('ideax-display'); } catch (e) {}
+
+const remMs = () => (S.t.run ? Math.max(0, S.t.dl - Date.now()) : S.t.rem);
+const tSet = s => { S.t.dur = s; S.t.rem = s * 1000; S.t.run = false; };
+const tStart = () => { if (!S.t.run && S.t.rem > 0) { S.t.run = true; S.t.dl = Date.now() + S.t.rem; } };
+const tPause = () => { if (S.t.run) { S.t.rem = remMs(); S.t.run = false; } };
+
+const gStart = () => {
+  if (S.g && !S.g.started) { S.g.started = true; S.g.run = true; S.g.dl = Date.now() + S.g.rem; }
+};
+
+function setMode(m, i) {
+  S.idx = i ?? (B[S.idx].state === m ? S.idx : Math.max(0, B.findIndex(b => b.state === m)));
+  S.mode = m;
+  if (m !== 'welcome') gStart();
+  const b = B[S.idx];
+  if (m === 'welcome' || m === 'opening') tSet(0);
+  else if (m !== 'announcement') {
+    const sec = b.sec || (m === 'development' ? 2 * 3600 : 0); // a sprint without a saved duration defaults to 2h
+    if (sec) { tSet(sec); tStart(); }
+  }
+}
+
+function cmd(k, v) {
+  if (k === 'mode') setMode(v);
+  else if (k === 'next' && B[S.idx + 1]) setMode(B[S.idx + 1].state, S.idx + 1);
+  else if (k === 'prev' && B[S.idx - 1]) setMode(B[S.idx - 1].state, S.idx - 1);
+  else if (k === 'start') tStart();
+  else if (k === 'pause') tPause();
+  else if (k === 'reset') { S.t.run = false; S.t.rem = S.t.dur * 1000; }
+  else if (k === 'dur') tSet(v);
+  else if (k === 'ann') { if (S.mode !== 'announcement') S.prev = S.mode; S.ann = v; S.mode = 'announcement'; S.rev++; gStart(); }
+  else if (k === 'g5p') { gAdd(300000); return; }
+  else if (k === 'g5m') { gAdd(-300000); return; }
+  else if (k === 'greset') S.g = { started: false, run: false, dl: 0, rem: G_MS };
+  else if (k === 'clear') { S.mode = S.prev || 'development'; }
+  else if (k === 'auto') S.auto = v;
+  commit();
+}
+
+function commit() {
+  try {
+    S.blocks = B;
+    localStorage.setItem('ideax-state', JSON.stringify(S));
+  } catch (e) {}
+  ch && ch.postMessage({ k: 'state', S, blocks: B });
+  refreshSprintUI();
+  DISPLAY && onState();
+}
+
+const parseDur = v => {
+  const p = String(v).trim().split(':').map(Number);
+  if (p.some(isNaN)) return 0;
+  return p.reduce((a, x) => a * 60 + x, 0);
+};
+
+/* ========================================================================= */
+/* SPRINT MANAGER (Feature to Add / Manage Sprints)                          */
+/* ========================================================================= */
+function showToast(msg) {
+  const t = $('#toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function addSprint(label, sub, sec, pos = 'before-closing', jumpNow = false) {
+  const nextNum = B.filter(b => b.state === 'development').length + 1;
+  const sLabel = label || `SPRINT ${String(nextNum).padStart(2, '0')}`;
+  const sSub = sub || `DAY 2 · BUILD`;
+  const sSec = sec || 2 * 3600;
+
+  const newBlock = { state: 'development', label: sLabel, sub: sSub, sec: sSec, isCustom: true };
+  let insertIdx = -1;
+
+  if (pos === 'after-current' && S.idx < B.length - 1) {
+    insertIdx = S.idx + 1;
+    B.splice(insertIdx, 0, newBlock);
+  } else if (pos === 'at-end') {
+    insertIdx = B.length;
+    B.push(newBlock);
+  } else {
+    // Default: Insert before closing
+    const closingIdx = B.findIndex(b => b.state === 'closing');
+    if (closingIdx !== -1) {
+      insertIdx = closingIdx;
+      B.splice(closingIdx, 0, newBlock);
+    } else {
+      insertIdx = B.length;
+      B.push(newBlock);
+    }
+  }
+
+  showToast(`⚡ ${sLabel} ADDED TO SCHEDULE`);
+
+  if (jumpNow && insertIdx !== -1) {
+    setMode('development', insertIdx);
+    cmd('start');
+  }
+
+  commit();
+}
+
+function openSprintModal() {
+  const modal = $('#modal-sprint');
+  if (!modal) return;
+  const nextNum = B.filter(b => b.state === 'development').length + 1;
+  $('#m-sp-label').value = `SPRINT ${String(nextNum).padStart(2, '0')}`;
+  $('#m-sp-sub').value = 'DAY 2 · BUILD';
+  $('#m-sp-dur').value = '02:00:00';
+  $$('.sp-pre').forEach(b => b.classList.toggle('active', b.dataset.sec === '7200'));
+  refreshSprintUI();
+  modal.classList.add('show');
+  $('#m-sp-label').focus();
+}
+
+function closeSprintModal() {
+  const modal = $('#modal-sprint');
+  if (modal) modal.classList.remove('show');
+}
+
+function getCurrentSprintNum() {
+  const curLabel = B[S.idx] ? B[S.idx].label : '';
+  const match = curLabel.match(/\d+/);
+  if (match) return parseInt(match[0], 10);
+  const devIdx = B.findIndex(b => b.state === 'development');
+  if (devIdx !== -1) {
+    const m = B[devIdx].label.match(/\d+/);
+    if (m) return parseInt(m[0], 10);
+  }
+  return 1;
+}
+
+function changeSprintNumber(num, shouldJump = false) {
+  const n = parseInt(num, 10);
+  if (isNaN(n) || n < 1) return;
+  const padNum = String(n).padStart(2, '0');
+  const targetLabel = `SPRINT ${padNum}`;
+
+  if (shouldJump) {
+    let foundIdx = B.findIndex(b => b.state === 'development' && (b.label.includes(padNum) || b.label === targetLabel));
+    if (foundIdx === -1) {
+      foundIdx = B.findIndex(b => b.state === 'development' && b.label.includes(String(n)));
+    }
+    if (foundIdx !== -1) {
+      setMode('development', foundIdx);
+      cmd('start');
+      showToast(`🚀 SWITCHED TO ${targetLabel}`);
+    } else {
+      addSprint(targetLabel, `DAY ${Math.min(3, Math.ceil(n / 2))} · BUILD`, 2 * 3600, 'before-closing', true);
+      showToast(`✨ CREATED & SWITCHED TO ${targetLabel}`);
+    }
+  } else {
+    let targetBlock = B[S.idx];
+    if (targetBlock.state !== 'development') {
+      const devIdx = B.findIndex(b => b.state === 'development');
+      if (devIdx !== -1) targetBlock = B[devIdx];
+    }
+    targetBlock.label = targetLabel;
+    
+    const l1 = $('#l1');
+    if (l1 && S.mode === 'development') {
+      l1.innerHTML = sp(targetLabel);
+    }
+    const cdl = $('#cdl');
+    if (cdl && S.mode === 'development') {
+      cdl.textContent = `TIME REMAINING · ${targetLabel}`;
+    }
+
+    showToast(`✓ SPRINT NUMBER UPDATED: ${targetLabel}`);
+    commit();
+  }
+
+  const qIn = $('#in-sp-num-quick');
+  if (qIn) qIn.value = padNum;
+}
+
+function openSprintNumModal() {
+  const modal = $('#modal-sprint-num');
+  if (!modal) return;
+  const curNum = getCurrentSprintNum();
+  const input = $('#m-sp-num-input');
+  const prev = $('#m-sp-num-preview');
+  if (input) input.value = curNum;
+  if (prev) prev.textContent = `SPRINT ${String(curNum).padStart(2, '0')}`;
+  $$('.sp-num-pre').forEach(btn => btn.classList.toggle('active', +btn.dataset.num === curNum));
+  modal.classList.add('show');
+  if (input) input.focus();
+}
+
+function closeSprintNumModal() {
+  const modal = $('#modal-sprint-num');
+  if (modal) modal.classList.remove('show');
+}
+
+function deleteBlock(index) {
+  if (B.length <= 1) return;
+  const removed = B.splice(index, 1)[0];
+  if (S.idx >= B.length) S.idx = B.length - 1;
+  showToast(`REMOVED: ${removed.label}`);
+  commit();
+}
+
+/* ============ background environment (Starlight Floating Particles) ============ */
+const BG = {
+  P: { r: 94, g: 225, b: 255, speed: 0.35, hz: 640, ring: 1 },
+  run() {
+    const canvas = $('#bg');
+    if (!canvas) return;
+    const g = canvas.getContext('2d'), P = this.P;
+    const pts = Array.from({ length: 65 }, () => ({
+      x: Math.random() * 1920,
+      y: Math.random() * 1080,
+      z: 0.3 + Math.random() * 0.7
+    }));
+    let last = performance.now();
+
+    const f = now => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      g.clearRect(0, 0, 1920, 1080);
+
+      const col = a => `rgba(${P.r | 0},${P.g | 0},${P.b | 0},${a})`;
+      g.fillStyle = col(0.7);
+      for (const p of pts) {
+        p.y -= dt * 11 * p.z * (1 + P.speed * 0.5);
+        if (p.y < -5) {
+          p.y = 1085;
+          p.x = Math.random() * 1920;
+        }
+        g.globalAlpha = p.z * 0.45;
+        g.fillRect(p.x, p.y, 2.5 * p.z, 2.5 * p.z);
+      }
+      g.globalAlpha = 1;
+      requestAnimationFrame(f);
+    };
+    requestAnimationFrame(f);
+  }
+};
+
+/* ========================================================================= */
+/* COUNTDOWN TIMING & SPATIAL POSITIONS                                      */
+/* ========================================================================= */
+const CDL = {
+  hero: { x: 0, y: -70, scale: 0.94, opacity: 1 },
+  right: { x: 440, y: 30, scale: 0.64, opacity: 1 },
+  corner: { x: 580, y: -410, scale: 0.32, opacity: 1 },
+  device: { x: 0, y: -150, scale: 0.72, opacity: 1 },
+  hidden: { x: 0, y: 0, scale: 0.7, opacity: 0 }
+};
+
+const cdMove = (k, first) => gsap.to('#cd', { ...CDL[k], duration: first ? 0.01 : 1.3, ease: 'expo.inOut' });
+
+function cdText(sec, forceH) {
+  const H = forceH || S.t.dur >= 3600 || sec >= 3600 || S.mode === 'opening';
+  const p = n => String(n).padStart(2, '0');
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const str = (H ? p(h) + ':' : '') + p(m) + ':' + p(s);
+  $('#cdd').innerHTML = [...str].map(c => (c === ':' ? '<span class="c">:</span>' : `<span>${c}</span>`)).join('');
+  const c = $('#cd').classList;
+  c.toggle('warn', sec > 0 && sec <= 60 && S.mode !== 'opening');
+  c.toggle('crit', sec > 0 && sec <= 10 && S.t.run);
+  $('#cdd').classList.toggle('has-h', H);
+}
+
+const CDLAB = {
+  welcome: () => '',
+  opening: () => 'HACKATHON TIMER · STANDBY',
+  development: b => 'TIME REMAINING · ' + (b ? b.label : 'SPRINT'),
+  breakfast: () => 'BREAK ENDS IN',
+  lunch: () => 'BREAK ENDS IN',
+  dinner: () => 'BREAK ENDS IN',
+  announcement: () => '',
+  closing: () => 'FINAL COUNTDOWN'
+};
+const setCdLabel = () => { $('#cdl').textContent = CDLAB[S.mode](B[S.idx]); };
+
+let lastSec = -1, lastG = '';
+function tick() {
+  try {
+    const gt = fmtHMS(gRem());
+    if (gt !== lastG) {
+      lastG = gt;
+      $('#gcdv').textContent = gt;
+      $('#gcd').classList.toggle('idle', !(S.g && S.g.run));
+    }
+    const ms = remMs();
+    const sec = Math.ceil(ms / 1000);
+    if (sec !== lastSec) {
+      lastSec = sec;
+      cdText(sec);
+    }
+    $('#cdb').style.transform = `scaleX(${S.t.dur ? ms / (S.t.dur * 1000) : 0})`;
+    if (S.t.run && ms <= 0) {
+      S.t.run = false;
+      S.t.rem = 0;
+      onZero();
+    }
+  } catch (e) {}
+  requestAnimationFrame(tick);
+}
+
+function onZero() {
+  if (S.mode === 'closing') {
+    cur && cur.api && cur.api.fin && cur.api.fin();
+    commit();
+    return;
+  }
+  gsap.fromTo('#cd', { scale: '+=0' }, { keyframes: [{ scale: '*=1.08', duration: 0.15 }, { scale: '*=.926', duration: 0.4 }] });
+  if (S.auto && B[S.idx + 1]) cmd('next');
+  else commit();
+}
+
+/* ========================================================================= */
+/* SCENES ENGINE                                                             */
+/* ========================================================================= */
+const rIn = (L, from, dur, d) => {
+  gsap.set('#robot', { opacity: 1, scale: L.s, y: L.y, x: from === 'left' ? -620 : 2200 });
+  Robot.walk(dur, d);
+  gsap.to('#robot', { x: L.x, duration: dur, ease: 'power2.out', delay: d });
+};
+
+const head = (t, s, x = 100) =>
+  `<div class="abs sc" style="left:${x}px;top:76px"><div class="mono tag">${t}</div>${s ? `<div class="mono dim">${s}</div>` : ''}</div>`;
+
+const nextInfo = n =>
+  n ? `<div class="abs sc mono" style="right:100px;bottom:90px;text-align:right;font-size:28px;letter-spacing:.2em;color:var(--dim)">NEXT ▸ <span style="color:var(--ink)">${n.label}</span>${n.sec ? '<br><span style="font-size:20px">' + [Math.floor(n.sec / 3600), Math.floor((n.sec % 3600) / 60)].map(x => String(x).padStart(2, '0')).join(':') + ' H:M</span>' : ''}</div>` : '';
+
+const titleBig = (t, c) =>
+  `<div class="abs sc big" style="left:100px;top:110px;font-size:160px;line-height:1;color:${c || 'var(--ink)'};text-shadow:0 0 50px var(--acc-glow)">${t}</div>`;
+
+const SCN = {
+  /* FRONT / WELCOME: Exact 3D Mascot on Front holding laptop */
+  welcome: {
+    name: 'WELCOME',
+    tint: [94, 225, 255],
+    speed: 0.35,
+    hz: 640,
+    cd: 'hidden',
+    robot: { x: 1220, y: 460, s: 1.25 },
+    html: () =>
+      `<div id="scan" class="abs" style="left:0;top:0;width:1920px;height:2px;background:rgba(94,225,255,.4);box-shadow:0 0 15px rgba(94,225,255,.6)"></div>
+       <div class="abs sc" style="left:130px;top:230px">
+         <div class="mono tag">// DISPLAY ONLINE</div>
+         <div class="big" id="w1" style="font-size:310px;line-height:.86;color:#ffffff;text-shadow:0 0 45px rgba(94,225,255,.5)">${sp('IDEAX')}</div>
+         <div class="big" id="w2" style="font-size:310px;line-height:.86;color:var(--acc);text-shadow:0 0 55px var(--acc-glow)">${sp('2026')}</div>
+         <div class="tagl" id="w3">${SCHEDULE.event.tagline}</div>
+       </div>`,
+    play(r, d) {
+      Robot.mount3D();
+      gsap.fromTo('#scan', { y: 0 }, { y: 1080, duration: 5, repeat: -1, ease: 'none' });
+      gsap.timeline({ delay: d })
+        .set('.sc', { opacity: 1 })
+        .from('#w1 .ch,#w2 .ch', { yPercent: 115, opacity: 0, stagger: 0.07, duration: 0.9, ease: 'expo.out' })
+        .from('#w3', { opacity: 0, letterSpacing: '.7em', duration: 1.4, ease: 'power3.out' }, '-=.6');
+      rIn(this.robot, 'right', 2, d + 0.2);
+      Robot.idle(d + 2.3);
+    }
+  },
+
+  opening: {
+    name: 'OPENING',
+    sweep: true,
+    tint: [94, 225, 255],
+    speed: 0.5,
+    hz: 640,
+    cd: 'device',
+    robot: { x: 380, y: 420, s: 1.4 },
+    html: () =>
+      head('// OPENING SEQUENCE', '') +
+      `<div class="abs sc pe" id="st" style="left:880px;top:634px;width:260px;height:110px;cursor:pointer"><div class="btn">START</div></div>
+       <div class="abs sc mono" id="sth" style="left:880px;top:780px;width:260px;text-align:center;color:var(--sig);letter-spacing:.3em;font-size:22px;text-shadow:0 0 15px var(--acc)">PRESS TO BEGIN</div>`,
+    play(r, d) {
+      Robot.mount3D();
+      let done = 0;
+      const L = this.robot;
+      gsap.set('#cd', { opacity: 1 });
+      gsap.timeline({ delay: d }).set('.sc:not(#st,#sth)', { opacity: 1 }).add(() => rIn(L, 'left', 2.2, 0), 0);
+      Robot.idle(d + 2.4);
+
+      const t = gsap.timeline({ delay: d + 2.2 });
+      t.fromTo('#st', { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.7, ease: 'back.out(2.5)' })
+        .to('#sth', { opacity: 1, duration: 0.4 }, '<.3')
+        .to('#st .btn', { scale: 1.05, duration: 0.5, yoyo: true, repeat: -1, ease: 'sine.inOut' })
+        .call(() => go(), null, '-=0.01');
+      t.pause();
+      gsap.delayedCall(d + 5.7, () => go());
+      t.play();
+
+      function go() {
+        if (done++) return;
+        SC.add(() => {
+          gsap.killTweensOf('#st .btn');
+          gsap.timeline()
+            .to('#st .btn', { scale: 0.88, duration: 0.09, ease: 'power2.in' })
+            .add(shock)
+            .to('#st .btn', { scale: 1, duration: 0.5, ease: 'elastic.out(1,.4)' })
+            .add(begin, '+=.05');
+        });
+      }
+      $('#st').onclick = go;
+
+      function shock() {
+        const e = document.createElement('div');
+        e.className = 'ring';
+        e.style.left = '1010px';
+        e.style.top = '689px';
+        $('#stage').appendChild(e);
+        gsap.fromTo(e, { scale: 0, opacity: 1 }, { scale: 40, opacity: 0, duration: 1.1, ease: 'power2.out', onComplete: () => e.remove() });
+        gsap.fromTo('#fl', { opacity: 0.7 }, { opacity: 0, duration: 0.6 });
+      }
+
+      function begin() {
+        const nb = B[S.idx + 1], o = { v: 0 };
+        $('#cdl').textContent = 'INITIALISING…';
+        gsap.to(o, { v: nb ? nb.sec : 0, duration: 1.4, ease: 'power2.inOut', onUpdate: () => cdText(Math.round(o.v), true), onComplete: () => cmd('next') });
+      }
+    }
+  },
+
+  /* DEVELOPMENT & SPRINTS: Exact 3D Mascot on Development holding laptop */
+  development: {
+    name: 'DEVELOPMENT',
+    sweep: true,
+    tint: [94, 225, 255],
+    speed: 1.1,
+    hz: 640,
+    cd: 'hero',
+    robot: { x: 140, y: 680, s: 1.25 },
+    html: (b, n) =>
+      head(b.label, b.sub) +
+      nextInfo(n).replace('bottom:90px', 'top:76px').replace('right:100px', 'right:100px') +
+      `<!-- Live Terminal Stream beside the coding mascot -->
+       <div class="abs sc mono" id="lg" style="left:560px;bottom:75px;font-size:20px;color:var(--dim);width:760px;height:120px;overflow:hidden;line-height:1.5;background:rgba(3,11,40,0.78);padding:14px 22px;border-radius:14px;border:1px solid rgba(94,225,255,0.3);backdrop-filter:blur(10px)"></div>`,
+    play(r, d) {
+      Robot.mount3D();
+      const pool = ['> git commit -m "ship it"', '> npm run build   ✓', '> deploying preview…', '> all tests passing', '> demo ready?', '> merge conflict resolved', '> syncing blocks…'];
+      let i = 0;
+      gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 }).from('.sc', { y: 40, stagger: 0.1, duration: 0.8, ease: 'expo.out' });
+      gsap.timeline({ repeat: -1, delay: d }).call(() => {
+        const lg = $('#lg');
+        if (!lg) return;
+        const l = document.createElement('div');
+        l.innerHTML = `<span style="color:var(--acc);margin-right:8px">●</span>` + pool[i++ % pool.length];
+        lg.appendChild(l);
+        if (lg.children.length > 4) lg.firstChild.remove();
+      }).to({}, { duration: 1.6 });
+
+      rIn(this.robot, 'left', 1.4, d + 0.3);
+      Robot.idle(d + 1.7);
+      Robot.type();
+    }
+  },
+
+  /* BREAKFAST: transparent burger.webm mascot video */
+  breakfast: {
+    name: 'BREAKFAST',
+    ring: 0,
+    tint: [255, 190, 80],
+    speed: 0.25,
+    hz: 700,
+    cd: 'right',
+    robot: { x: 220, y: 520, s: 1.35 },
+    html: (b, n) =>
+      titleBig('BREAKFAST', '#ffc46b') +
+      nextInfo(n) +
+      `<div class="abs sc" style="left:0;top:940px;width:1920px;height:140px;background:rgba(3,11,40,0.85);border-top:3px solid var(--acc);backdrop-filter:blur(12px)"></div>`,
+    play(r, d) {
+      Robot.mountVideo('burger.webm');
+      gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 }).from('.sc', { y: 50, stagger: 0.1, duration: 0.9, ease: 'expo.out' });
+      rIn(this.robot, 'left', 1.6, d + 0.2);
+    }
+  },
+
+  /* LUNCH: Robot picks burger with hand and takes to mouth */
+  lunch: {
+    name: 'LUNCH',
+    ring: 0,
+    tint: [210, 225, 80],
+    speed: 0.3,
+    hz: 690,
+    cd: 'right',
+    robot: { x: 220, y: 520, s: 1.35 },
+    html: (b, n) =>
+      titleBig('LUNCH', '#8dffb0') +
+      nextInfo(n) +
+      `<div class="abs sc" style="left:0;top:940px;width:1920px;height:140px;background:rgba(3,11,40,0.85);border-top:3px solid var(--acc);backdrop-filter:blur(12px)"></div>`,
+    play(r, d) {
+      Robot.mountEating('lunch');
+      gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 }).from('.sc', { y: 50, stagger: 0.1, duration: 0.9, ease: 'expo.out' });
+      rIn(this.robot, 'left', 1.6, d + 0.2);
+      Robot.idle(d + 1.9);
+      Robot.eat(d + 1.8);
+    }
+  },
+
+  /* DINNER: transparent noodels.webm mascot video */
+  dinner: {
+    name: 'DINNER',
+    ring: 0,
+    tint: [70, 120, 255],
+    speed: 0.2,
+    hz: 720,
+    cd: 'right',
+    robot: { x: 220, y: 520, s: 1.35 },
+    html: (b, n) =>
+      titleBig('DINNER', '#9dc3ff').replace('top:110px', 'top:120px') +
+      nextInfo(n) +
+      `<div class="abs sc" style="left:0;top:940px;width:1920px;height:140px;background:rgba(3,11,40,0.85);border-top:3px solid var(--acc);backdrop-filter:blur(12px)"></div>`,
+    play(r, d) {
+      Robot.mountVideo('noodels.webm');
+      gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 }).from('.sc', { y: 50, stagger: 0.1, duration: 0.9, ease: 'expo.out' });
+      rIn(this.robot, 'left', 1.6, d + 0.2);
+    }
+  },
+
+  announcement: {
+    name: 'ANNOUNCEMENT',
+    sweep: true,
+    tint: [255, 70, 70],
+    speed: 0.5,
+    hz: 700,
+    cd: 'corner',
+    robot: { x: 1400, y: 512, s: 1.3 },
+    html: () =>
+      `<div id="ab" class="abs" style="left:0;top:190px;width:24px;height:700px;background:var(--acc);box-shadow:0 0 20px var(--acc)"></div>
+       <div id="ann" class="abs" style="left:120px;top:210px;width:1200px">${annInner()}</div>
+       <div class="abs mono" id="ex" style="left:1560px;top:330px;font-size:200px;font-weight:800;color:var(--acc);text-shadow:0 0 35px var(--acc-glow)">!</div>`,
+    play(r, d) {
+      Robot.mount3D();
+      gsap.from('#ab', { scaleY: 0, transformOrigin: '50% 0', duration: 0.9, ease: 'expo.out', delay: d });
+      annIn(d + 0.2);
+      gsap.from('#ex', { scale: 0, opacity: 0, duration: 0.6, ease: 'back.out(3)', delay: d + 0.8 });
+      gsap.to('#ex', { y: -14, duration: 0.5, yoyo: true, repeat: -1, delay: d + 1.4 });
+      rIn(this.robot, 'right', 1.2, d);
+      Robot.idle(d + 1.3);
+      gsap.timeline({ delay: d + 1.3 }).add(Robot.react());
+    }
+  },
+
+  closing: {
+    name: 'CLOSING',
+    sweep: true,
+    tint: [94, 225, 255],
+    speed: 1.6,
+    hz: 640,
+    cd: 'hero',
+    robot: { x: 1450, y: 512, s: 1.3 },
+    html: () =>
+      head('// EVENT COMPLETE', '') +
+      `<div id="fin" class="abs" style="left:110px;top:150px;opacity:0">
+         <div class="big" id="f1" style="font-size:290px;line-height:.95;color:#ffffff;text-shadow:0 0 45px rgba(94,225,255,.6)">${sp('IDEAX 2026')}</div>
+         <div class="big" id="f3" style="font-size:110px;color:var(--acc);margin-top:20px;white-space:nowrap;text-shadow:0 0 40px var(--acc-glow)">THANK YOU, BUILDERS</div>
+         <div class="tagl" id="f4" style="font-size:34px">BUILD • CREATE • COMPETE</div>
+       </div>`,
+    play(r, d) {
+      Robot.mount3D();
+      let fired = 0;
+      gsap.timeline({ delay: d }).to('.sc', { opacity: 1, duration: 0.01 });
+      rIn(this.robot, 'right', 1.4, d);
+      Robot.idle(d + 1.5);
+
+      return {
+        fin() {
+          if (fired++) return;
+          SC.add(() => {
+            const t = gsap.timeline();
+            t.to('#cd', { scale: 1.7, opacity: 0, duration: 0.6, ease: 'power3.in' }, 0)
+              .fromTo('#fl', { opacity: 1 }, { opacity: 0, duration: 0.9 }, 0.05)
+              .set('#fin', { opacity: 1 }, 0.2)
+              .from('#f1 .ch', { yPercent: 120, scale: 1.5, opacity: 0, stagger: 0.07, duration: 0.8, ease: 'expo.out' }, 0.3)
+              .from('#f3', { clipPath: 'inset(0 100% 0 0)', duration: 1.1, ease: 'power4.out' }, 1.2)
+              .from('#f4', { opacity: 0, duration: 1 }, 2);
+            Robot.rest();
+            Robot.cheer();
+            for (let i = 0; i < 70; i++) {
+              const c = document.createElement('i');
+              c.className = 'cf';
+              c.style.background = ['#5ee1ff', '#ffffff', '#2563eb', '#ffd166'][i % 4];
+              r.appendChild(c);
+              gsap.fromTo(c, {
+                x: Math.random() * 1900,
+                y: -60 - Math.random() * 400,
+                rotation: Math.random() * 360
+              }, {
+                y: 1150,
+                rotation: '+=540',
+                duration: 3 + Math.random() * 3,
+                repeat: -1,
+                ease: 'none',
+                delay: Math.random() * 2
+              });
+            }
+          });
+        }
+      };
+    }
+  }
+};
+
+function annInner() {
+  const a = S.ann,
+    t = a.title || 'ANNOUNCEMENT',
+    m = a.msg || '',
+    fs = t.length <= 14 ? 220 : t.length <= 24 ? 160 : 110,
+    ms = m.length <= 90 ? 60 : m.length <= 200 ? 46 : 36;
+  return `<div class="mono tag" id="at"><i class="dot"></i>ANNOUNCEMENT</div>
+          <div class="big" id="ati" style="font-size:${fs}px;line-height:.95;margin:22px 0 30px;color:#ffffff;text-shadow:0 0 40px rgba(94,225,255,.5)">
+            ${t.split(' ').map(w => `<span style="display:inline-block;overflow:hidden;vertical-align:bottom;margin-right:.25em"><span class="w" style="display:inline-block">${esc(w)}</span></span>`).join('')}
+          </div>
+          <div id="amg" style="font-size:${ms}px;line-height:1.3;max-width:1150px;color:#eaf6ff;background:rgba(3,11,40,0.65);padding:14px 24px;border-radius:14px;border:1px solid rgba(94,225,255,0.25);backdrop-filter:blur(10px)">${esc(m)}</div>`;
+}
+
+const annIn = d =>
+  gsap.timeline({ delay: d })
+    .from('#at', { opacity: 0, x: -60, duration: 0.5, ease: 'power3.out' })
+    .from('#ati .w', { yPercent: 120, skewY: 8, stagger: 0.09, duration: 0.8, ease: 'expo.out' }, '-=.2')
+    .from('#amg', { opacity: 0, y: 30, duration: 0.8, ease: 'power2.out' }, '-=.3');
+
+/* ============ display shell: transitions engine ============ */
+let cur = null, SC = null, shown = null, busy = false, pend = null, shownRev = -1;
+
+function mount(mode, d) {
+  if (cur) {
+    cur.ctx.kill();
+    cur.root.remove();
+  }
+  Robot.rest();
+  const sc = SCN[mode], b = B[S.idx], n = B[S.idx + 1], root = document.createElement('div');
+  root.className = 'abs';
+  root.style.cssText = 'inset:0';
+  root.innerHTML = sc.html(b, n);
+  $('#scene').appendChild(root);
+  $('#robot').style.pointerEvents = mode === 'opening' ? 'auto' : 'none';
+  $('#robot').style.zIndex = mode === 'opening' ? 4 : 5;
+  const ctx = gsap.context(() => {});
+  SC = ctx;
+  cur = { mode, ctx, root };
+  ctx.add(() => { cur.api = sc.play(root, d, b, n) || {}; });
+  setCdLabel();
+  shownRev = S.rev;
+}
+
+function sweep(name) {
+  const t = gsap.timeline();
+  $('#sw .lab').textContent = '▸ ' + name;
+  t.set('#sw', { display: 'block' })
+    .set('#sw .b', { skewX: -12 })
+    .fromTo('#sw .b1', { xPercent: -120 }, { xPercent: 0, duration: 0.55, ease: 'power3.in' })
+    .fromTo('#sw .b2', { xPercent: -120 }, { xPercent: 0, duration: 0.55, ease: 'power3.in' }, 0.12)
+    .fromTo('#sw .lab', { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power3.out' }, 0.55)
+    .to('#sw .lab', { opacity: 0, duration: 0.2 }, 1)
+    .to('#sw .b1', { xPercent: 120, duration: 0.6, ease: 'power3.out' }, 0.95)
+    .to('#sw .b2', { xPercent: 120, duration: 0.6, ease: 'power3.out' }, 0.85)
+    .set('#sw', { display: 'none' });
+  return t;
+}
+
+function goto(mode) {
+  if (busy) {
+    pend = mode;
+    return;
+  }
+  busy = true;
+  shown = mode;
+  const sc = SCN[mode], prev = cur, first = !prev, hs = !first && sc.sweep;
+  const tl = gsap.timeline({
+    onComplete() {
+      busy = false;
+      if (pend) {
+        const m = pend;
+        pend = null;
+        if (m !== shown) goto(m);
+      }
+    }
+  });
+
+  if (prev) {
+    tl.to(prev.root, { opacity: 0, duration: 0.6 }, 0)
+      .to('#scene .sc', { y: -30, duration: 0.6, stagger: 0.03 }, 0)
+      .to('#robot', { x: -700, duration: 0.8, ease: 'power2.in' }, 0);
+  }
+  tl.add(cdMove(sc.cd, first), first ? 0 : 0.1)
+    .to(BG.P, {
+      r: sc.tint[0],
+      g: sc.tint[1],
+      b: sc.tint[2],
+      speed: sc.speed,
+      hz: sc.hz,
+      ring: sc.ring ?? 1,
+      duration: first ? 0.1 : 1.6,
+      ease: 'power2.inOut'
+    }, 0.2);
+  if (hs) tl.add(sweep(sc.name), 0.25);
+  tl.call(() => mount(mode, hs ? 0.5 : 0.15), null, first ? 0.05 : 1)
+    .to({}, { duration: 0.2 }, first ? 0.05 : 1);
+  tl.call(() => { lastSec = -1; }, null, 1.1);
+}
+
+function onState() {
+  if (S.mode !== shown) {
+    goto(S.mode);
+  } else if (S.mode === 'announcement' && S.rev !== shownRev) {
+    shownRev = S.rev;
+    $('#ann').innerHTML = annInner();
+    SC.add(() => { annIn(0); Robot.react(); });
+  } else {
+    setCdLabel();
+  }
+  lastSec = -1;
+}
+
+/* ========================================================================= */
+/* CONTROL PANEL (Includes SPRINT MANAGER to Add & Control Sprints)          */
+/* ========================================================================= */
+function mountControl(host, full) {
+  let live = true, pong = DISPLAY ? Infinity : 0;
+  host.innerHTML = `
+    <h2>IDEAX 2026 — DISPLAY CONTROL</h2>
+    <small id="cs"></small>
+    
+    <div class="g" id="cm">
+      ${MODES.map(m => `<button data-m="${m}">${m}</button>`).join('')}
+    </div>
+
+    <!-- SPRINT MANAGER -->
+    <div style="margin:14px 0 10px; background:rgba(2,9,31,0.85); padding:10px 12px; border-radius:10px; border:1px solid rgba(94,225,255,0.3)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+        <span style="color:var(--sig); font-weight:800; font-size:12px">⚡ SPRINT & SCHEDULE MANAGER</span>
+        <button id="btn-toggle-add" style="padding:4px 8px; font-size:11px; background:#1d4ed8; color:#fff; border-radius:6px">+ Custom</button>
+      </div>
+      
+      <!-- Quick Add Sprints -->
+      <div class="r" style="margin:6px 0">
+        <button id="sp-q1" style="font-size:11px; padding:6px 4px">+ 1h Sprint</button>
+        <button id="sp-q2" style="font-size:11px; padding:6px 4px; background:#1d4ed8">+ 2h Sprint</button>
+        <button id="sp-q3" style="font-size:11px; padding:6px 4px">+ 3h Sprint</button>
+      </div>
+
+      <!-- Custom Sprint Form -->
+      <div id="sp-form" style="display:none; margin-top:8px; border-top:1px dashed rgba(94,225,255,0.3); padding-top:8px">
+        <small>Sprint Label:</small>
+        <input type="text" id="sp-in-label" placeholder="e.g. SPRINT 04" value="SPRINT 04">
+        <small>Subtitle:</small>
+        <input type="text" id="sp-in-sub" placeholder="e.g. DAY 2 · FINAL BUILD" value="DAY 2 · BUILD">
+        <small>Duration (hh:mm:ss):</small>
+        <input type="text" id="sp-in-dur" placeholder="02:00:00" value="02:00:00">
+        <small>Insert Position:</small>
+        <select id="sp-in-pos" style="font-size:12px">
+          <option value="before-closing">Before Closing (Recommended)</option>
+          <option value="after-current">After Current Block</option>
+          <option value="at-end">At the End</option>
+        </select>
+        <div class="r" style="margin-top:6px">
+          <button id="sp-in-submit" class="on" style="font-size:12px">Add to Schedule</button>
+          <button id="sp-in-cancel" style="font-size:12px">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Schedule Blocks List -->
+      <div id="sp-list" style="max-height:160px; overflow-y:auto; margin-top:8px"></div>
+    </div>
+
+    <small>COUNTDOWN</small>
+    <div class="rd" id="cr">--:--:--</div>
+    <small id="cb"></small>
+    <div class="r">
+      <button data-c="g5m">48H −5 min</button>
+      <button data-c="g5p">48H +5 min</button>
+      <button data-c="greset" title="Reset the 48h clock to 48:00:00 (starts again after Welcome)">48H reset</button>
+    </div>
+    <small id="gr">48H EVENT · --:--:--</small>
+    <div class="r">
+      <button data-c="start">Start</button>
+      <button data-c="pause">Pause</button>
+      <button data-c="reset">Reset</button>
+    </div>
+    <div class="r">
+      <input type="text" id="cdur" placeholder="hh:mm:ss">
+      <button data-c="dur" style="flex:0 0 90px">Set</button>
+      <button data-c="t10" style="flex:0 0 90px">10s</button>
+    </div>
+
+    <small>ANNOUNCEMENT</small>
+    <input type="text" id="at2" placeholder="Title">
+    <textarea id="am2" rows="2" placeholder="Message"></textarea>
+    <div class="r">
+      <button data-c="ann" class="on">Display</button>
+      <button data-c="clear">Clear</button>
+    </div>
+
+    <div class="r">
+      <button data-c="prev">◂ Back</button>
+      <button data-c="next">Next block ▸</button>
+      <button data-c="auto" id="au">Auto: off</button>
+    </div>
+    <small>Sync: BroadcastChannel · localStorage persistence</small>
+  `;
+
+  // Sprint manager events
+  $('#btn-toggle-add').onclick = () => {
+    const f = $('#sp-form');
+    f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  };
+  $('#sp-in-cancel').onclick = () => { $('#sp-form').style.display = 'none'; };
+  $('#sp-in-submit').onclick = () => {
+    const lbl = $('#sp-in-label').value.trim();
+    const sub = $('#sp-in-sub').value.trim();
+    const dur = parseDur($('#sp-in-dur').value.trim()) || 2 * 3600;
+    const pos = $('#sp-in-pos').value;
+    addSprint(lbl, sub, dur, pos);
+    $('#sp-form').style.display = 'none';
+  };
+
+  $('#sp-q1').onclick = () => addSprint(null, null, 1 * 3600);
+  $('#sp-q2').onclick = () => addSprint(null, null, 2 * 3600);
+  $('#sp-q3').onclick = () => addSprint(null, null, 3 * 3600);
+
+  host.onclick = e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const m = b.dataset.m, c = b.dataset.c;
+    if (m) cmd('mode', m);
+    else if (c === 'dur') cmd('dur', parseDur($('#cdur').value));
+    else if (c === 't10') cmd('dur', 10);
+    else if (c === 'ann') cmd('ann', { title: $('#at2').value.trim(), msg: $('#am2').value.trim() });
+    else if (c === 'auto') cmd('auto', !S.auto);
+    else if (c) cmd(c);
+  };
+
+  if (ch) {
+    const old = ch.onmessage;
+    ch.onmessage = e => {
+      const d = e.data;
+      if (d.k === 'state' && !DISPLAY) {
+        S = d.S;
+        if (d.blocks) {
+          SCHEDULE.blocks.length = 0;
+          SCHEDULE.blocks.push(...d.blocks);
+        }
+      }
+      if (d.k === 'ping' && DISPLAY) ch.postMessage({ k: 'pong' });
+      if (d.k === 'pong') pong = Date.now();
+      if (old) old(e);
+    };
+  }
+  setInterval(() => ch && !DISPLAY && ch.postMessage({ k: 'ping' }), 3000);
+  ch && !DISPLAY && ch.postMessage({ k: 'ping' });
+
+  const loop = () => {
+    if (host.offsetParent !== null || full) {
+      const ms = remMs(), s = Math.ceil(ms / 1000), p = n => String(n).padStart(2, '0');
+      $('#cr').textContent = `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+      $('#cb').textContent = S.t.run ? 'RUNNING' : ms > 0 ? 'PAUSED' : 'STOPPED';
+      $('#gr').textContent = '48H EVENT · ' + fmtHMS(gRem()) + (S.g && S.g.run ? ' · RUNNING' : ' · WAITING FOR WELCOME TO END');
+      $$('[data-m]', host).forEach(b => b.classList.toggle('on', b.dataset.m === S.mode));
+      $('#au').textContent = 'Auto: ' + (S.auto ? 'on' : 'off');
+      const ok = DISPLAY || Date.now() - pong < 7000;
+      $('#cs').innerHTML = ok ? '<span class="ok">● DISPLAY CONNECTED</span>' : '○ NO DISPLAY DETECTED — open this page (no #control) in another tab';
+      $('#cs').innerHTML += ' · ' + (B[S.idx] ? B[S.idx].label : '');
+    }
+
+    const sel = $('#ctl-sel');
+    if (sel && sel.value !== String(S.idx)) sel.value = String(S.idx);
+    const pp = $('#btn-pp');
+    if (pp) pp.textContent = S.t.run ? 'Pause' : 'Resume';
+
+    requestAnimationFrame(loop);
+  };
+  loop();
+  refreshSprintUI();
+}
+
+function refreshSprintUI() {
+  // Update floating bar dropdown
+  const sel = $('#ctl-sel');
+  if (sel) {
+    sel.innerHTML = B.map((b, i) => `<option value="${i}">${b.state.toUpperCase()} (${b.label})</option>`).join('');
+    sel.value = String(S.idx);
+  }
+
+  // Update schedule list in control panel and modal
+  const renderList = (targetId) => {
+    const list = $(targetId);
+    if (!list) return;
+    list.innerHTML = B.map((b, i) => {
+      const active = i === S.idx ? 'active' : '';
+      const durStr = b.sec ? [Math.floor(b.sec / 3600), Math.floor((b.sec % 3600) / 60)].map(x => String(x).padStart(2, '0')).join(':') : '';
+      return `
+        <div class="sp-item ${active}">
+          <span><strong>${b.label}</strong> <small style="color:var(--dim);margin-left:6px">(${b.state}${durStr ? ' · ' + durStr : ''})</small></span>
+          <div>
+            <button class="btn-sm" style="background:#1d4ed8;color:#fff" onclick="setMode(B[${i}].state, ${i}); commit();">▶</button>
+            ${b.isCustom ? `<button class="btn-sm" style="background:#5a1520;color:#ff8888" onclick="deleteBlock(${i})">✕</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  // Update quick sprint number input on floating bar
+  const qIn = $('#in-sp-num-quick');
+  if (qIn) {
+    qIn.value = String(getCurrentSprintNum()).padStart(2, '0');
+  }
+
+  renderList('#sp-list');
+  renderList('#modal-sp-list');
+}
+
+/* ============ quick control toolbar & modal event bindings ============ */
+function initScreenshotBar(togglePanel) {
+  const sel = $('#ctl-sel');
+  if (sel) {
+    sel.onchange = e => {
+      const i = +e.target.value;
+      setMode(B[i].state, i);
+      commit();
+      sel.blur();
+    };
+  }
+
+  $('#btn-pv').onclick = () => {
+    if (S.idx > 0) cmd('mode', B[S.idx - 1].state);
+    else cmd('mode', B[B.length - 1].state);
+  };
+  $('#btn-nx').onclick = () => {
+    if (S.idx < B.length - 1) cmd('mode', B[S.idx + 1].state);
+    else cmd('mode', B[0].state);
+  };
+  $('#btn-pp').onclick = () => {
+    cmd(S.t.run ? 'pause' : 'start');
+  };
+  $('#btn-g5m').onclick = () => cmd('g5m');
+  $('#btn-g5p').onclick = () => cmd('g5p');
+  $('#btn-m5').onclick = () => {
+    if (S.t.dur) {
+      S.t.rem = Math.max(0, S.t.rem - 300000);
+      if (S.t.run) S.t.dl = Date.now() + S.t.rem;
+      commit();
+    }
+  };
+  $('#btn-p5').onclick = () => {
+    if (S.t.dur) {
+      S.t.rem += 300000;
+      if (S.t.run) S.t.dl += 300000;
+      S.t.dur = Math.max(S.t.dur, Math.ceil(S.t.rem / 1000));
+      commit();
+    }
+  };
+
+  // Quick Sprint Stepper on floating bar
+  const btnDec = $('#btn-sp-num-dec');
+  if (btnDec) btnDec.onclick = () => changeSprintNumber(Math.max(1, getCurrentSprintNum() - 1), false);
+  const btnInc = $('#btn-sp-num-inc');
+  if (btnInc) btnInc.onclick = () => changeSprintNumber(getCurrentSprintNum() + 1, false);
+  const quickIn = $('#in-sp-num-quick');
+  if (quickIn) {
+    quickIn.onchange = e => changeSprintNumber(e.target.value, false);
+    quickIn.onkeydown = e => { if (e.key === 'Enter') changeSprintNumber(e.target.value, false); };
+  }
+
+  // Quick add sprint from bottom toolbar
+  $('#btn-add-sp').onclick = () => openSprintModal();
+
+  // Top HUD buttons
+  const topAdd = $('#top-btn-add-sprint');
+  if (topAdd) topAdd.onclick = () => openSprintModal();
+  const topSpNum = $('#top-btn-sprint-num');
+  if (topSpNum) topSpNum.onclick = () => openSprintNumModal();
+  const topCtrl = $('#top-btn-control');
+  if (topCtrl) topCtrl.onclick = () => togglePanel();
+
+  // Add Sprint Modal event bindings
+  const mClose = $('#modal-sp-close');
+  if (mClose) mClose.onclick = () => closeSprintModal();
+  const mCancel = $('#m-sp-cancel');
+  if (mCancel) mCancel.onclick = () => closeSprintModal();
+
+  $$('.sp-pre').forEach(btn => {
+    btn.onclick = () => {
+      $$('.sp-pre').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sec = +btn.dataset.sec;
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      $('#m-sp-dur').value = [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
+    };
+  });
+
+  const mSubmit = $('#m-sp-submit');
+  if (mSubmit) {
+    mSubmit.onclick = () => {
+      const lbl = $('#m-sp-label').value.trim();
+      const sub = $('#m-sp-sub').value.trim();
+      const dur = parseDur($('#m-sp-dur').value.trim()) || 2 * 3600;
+      const pos = $('#m-sp-pos').value;
+      addSprint(lbl, sub, dur, pos, false);
+      closeSprintModal();
+    };
+  }
+
+  const mSubmitJump = $('#m-sp-submit-jump');
+  if (mSubmitJump) {
+    mSubmitJump.onclick = () => {
+      const lbl = $('#m-sp-label').value.trim();
+      const sub = $('#m-sp-sub').value.trim();
+      const dur = parseDur($('#m-sp-dur').value.trim()) || 2 * 3600;
+      const pos = $('#m-sp-pos').value;
+      addSprint(lbl, sub, dur, pos, true);
+      closeSprintModal();
+    };
+  }
+
+  // Change Sprint Number Modal event bindings
+  const mSpNumClose = $('#modal-spnum-close');
+  if (mSpNumClose) mSpNumClose.onclick = () => closeSprintNumModal();
+  const mSpNumCancel = $('#m-spnum-cancel');
+  if (mSpNumCancel) mSpNumCancel.onclick = () => closeSprintNumModal();
+
+  $$('.sp-num-pre').forEach(btn => {
+    btn.onclick = () => {
+      $$('.sp-num-pre').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const num = +btn.dataset.num;
+      const inp = $('#m-sp-num-input');
+      if (inp) inp.value = num;
+      const prv = $('#m-sp-num-preview');
+      if (prv) prv.textContent = `SPRINT ${String(num).padStart(2, '0')}`;
+    };
+  });
+
+  const spNumInput = $('#m-sp-num-input');
+  if (spNumInput) {
+    spNumInput.oninput = () => {
+      const val = parseInt(spNumInput.value, 10) || 1;
+      const prv = $('#m-sp-num-preview');
+      if (prv) prv.textContent = `SPRINT ${String(val).padStart(2, '0')}`;
+      $$('.sp-num-pre').forEach(b => b.classList.toggle('active', +b.dataset.num === val));
+    };
+  }
+
+  const mSpNumApply = $('#m-spnum-apply');
+  if (mSpNumApply) {
+    mSpNumApply.onclick = () => {
+      const val = $('#m-sp-num-input').value;
+      changeSprintNumber(val, false);
+      closeSprintNumModal();
+    };
+  }
+
+  const mSpNumJump = $('#m-spnum-jump');
+  if (mSpNumJump) {
+    mSpNumJump.onclick = () => {
+      const val = $('#m-sp-num-input').value;
+      changeSprintNumber(val, true);
+      closeSprintNumModal();
+    };
+  }
+
+  $('#btn-rs').onclick = () => cmd('reset');
+  $('#btn-fs').onclick = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen());
+  $('#btn-more').onclick = () => togglePanel();
+
+  const ctl = $('#ctl');
+  addEventListener('mousemove', e => {
+    if (e.clientY >= window.innerHeight - 85) {
+      ctl.classList.add('show');
+      $('#vp').classList.add('show-cursor');
+    } else {
+      ctl.classList.remove('show');
+      if ($('.cp.ov') && $('.cp.ov').style.display !== 'block') {
+        $('#vp').classList.remove('show-cursor');
+      }
+    }
+  });
+}
+
+/* ============ boot ============ */
+if (DISPLAY) {
+  Robot.mount3D();
+  BG.run();
+  S.mode !== 'closing' || 0;
+
+  const fit = () => {
+    const v = $('#vp');
+    $('#stage').style.transform = `scale(${Math.min(v.clientWidth / 1920, v.clientHeight / 1080)})`;
+  };
+  fit();
+  addEventListener('resize', fit);
+
+  const cp = document.createElement('div');
+  cp.className = 'cp ov';
+  document.body.appendChild(cp);
+  mountControl(cp, false);
+
+  const toggle = () => {
+    cp.style.display = cp.style.display === 'block' ? 'none' : 'block';
+    $('#vp').style.cursor = cp.style.display === 'block' ? 'default' : 'none';
+  };
+  $('#hint').onclick = toggle;
+  setTimeout(() => { $('#hint').style.opacity = 0.25; }, 7000);
+
+  initScreenshotBar(toggle);
+
+  ch && (ch.onmessage = e => {
+    const d = e.data;
+    if (d.k === 'state') {
+      S = d.S;
+      if (d.blocks) {
+        SCHEDULE.blocks.length = 0;
+        SCHEDULE.blocks.push(...d.blocks);
+        refreshSprintUI();
+      }
+      onState();
+    } else if (d.k === 'ping') {
+      ch.postMessage({ k: 'pong' });
+    }
+  });
+
+  const fs = async () => {
+    try {
+      document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen();
+      navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {});
+    } catch (e) {}
+  };
+
+  addEventListener('keydown', e => {
+    const tag = e.target.tagName;
+    if (/INPUT|TEXTAREA/.test(tag)) return;
+    if (tag === 'SELECT') e.target.blur(); // a focused dropdown must not swallow the shortcut keys
+    const k = e.key.toLowerCase();
+    if (/^[0-9]$/.test(k)) e.preventDefault();
+    if (k === 'f') fs();
+    else if (k === 'c') toggle();
+    else if (k === 's') openSprintModal();
+    else if (k === 'n') openSprintNumModal();
+    else if (k === 'escape') { closeSprintModal(); closeSprintNumModal(); }
+    else if (k === ' ') {
+      e.preventDefault();
+      cmd(S.t.run ? 'pause' : 'start');
+    } else if (k === 'r') {
+      cmd('reset');
+    } else if (k === 'arrowleft') {
+      $('#btn-pv').click();
+    } else if (k === 'arrowright') {
+      $('#btn-nx').click();
+    } else if (k === 'arrowup') {
+      $('#btn-p5').click();
+    } else if (k === 'arrowdown') {
+      $('#btn-m5').click();
+    } else if (k === '-') {
+      cmd('g5m');
+    } else if (k === '+' || k === '=') {
+      cmd('g5p');
+    } else if (k === 'a') {
+      cmd('ann', S.ann.title ? S.ann : { title: 'HELLO, BUILDERS', msg: 'Welcome to IdeaX 2026. Prepare for the build!' });
+    } else if (/^[0-9]$/.test(k)) {
+      // 1-9 jump to the Nth schedule block, 0 jumps to the last one (Closing)
+      const i = k === '0' ? B.length - 1 : +k - 1;
+      if (B[i]) {
+        setMode(B[i].state, i);
+        commit();
+        showToast(`${k} → ${B[i].label}`);
+      }
+    }
+  });
+
+  ['wheel', 'touchmove', 'contextmenu'].forEach(ev => $('#stage').addEventListener(ev, e => e.preventDefault(), { passive: false }));
+  $('#robot').onclick = () => SC && SC.add(() => Robot.react());
+
+  tick();
+  goto(S.mode);
+} else {
+  $('#vp').style.display = 'none';
+  $('#hint').style.display = 'none';
+  $('#ctl-wrap').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  const cp = document.createElement('div');
+  cp.className = 'cp full';
+  document.body.appendChild(cp);
+  mountControl(cp, true);
+}
+</script>
+</body>
+</html>
