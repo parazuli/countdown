@@ -44,7 +44,7 @@ Both windows must be in the **same browser** on the same computer, since syncing
 1. **Projector screen:** with `index.html` open, drag that browser window to the projector.
 2. Press **`F`** (or click **Fullscreen**) to go fullscreen. The screen is kept awake while fullscreen.
 3. **Operator screen:** in the *same browser*, open a second tab or window with the same address and add `#control` to the end (for example `file:///.../index.html#control`). This is the full control panel.
-4. On the projector window you can also press **`C`** (or click **⚙ CONTROL**) to slide the control panel over the display, or use the bottom quick-controls bar.
+4. On the projector window you can also press **`C`** (or click **⚙ CONTROL**) to slide the control panel over the display, or use the bottom quick-controls bar. Close it again with the **← Back to display** button at the top of the panel, with `Esc`, or with `C`. On the standalone control page (`#control`), the same button takes you back to the display page.
 
 > Both windows must be in the same browser on the same computer. They sync through `BroadcastChannel` and `localStorage`, which don't work across different browsers or machines.
 
@@ -129,7 +129,7 @@ The control panel exposes all actions. The display also accepts these keyboard s
 | `N` | Open the *Change Sprint Number* dialog |
 | `C` | Toggle the control panel |
 | `F` | Toggle fullscreen |
-| `Esc` | Close dialogs |
+| `Esc` | Close dialogs and the control panel |
 
 ## Customizing the schedule
 

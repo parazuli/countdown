@@ -2041,6 +2041,7 @@ function onState() {
 function mountControl(host, full) {
   let live = true, pong = DISPLAY ? Infinity : 0;
   host.innerHTML = `
+    <button id="cp-back" style="width:100%;margin-bottom:12px">${full ? '← Back to display' : '← Back to display (close panel)'}</button>
     <h2>IDEAX 2026 — DISPLAY CONTROL</h2>
     <small id="cs"></small>
     
@@ -2121,6 +2122,12 @@ function mountControl(host, full) {
     </div>
     <small>Sync: BroadcastChannel · localStorage persistence</small>
   `;
+
+  // Back: close the overlay on the projector, or leave the standalone control page for the display page
+  $('#cp-back').onclick = () => {
+    if (full) location.href = location.href.split('#')[0].split('?')[0];
+    else { host.style.display = 'none'; $('#vp').style.cursor = 'none'; }
+  };
 
   // Sprint manager events
   $('#btn-toggle-add').onclick = () => {
@@ -2461,7 +2468,10 @@ if (DISPLAY) {
     else if (k === 'c') toggle();
     else if (k === 's') openSprintModal();
     else if (k === 'n') openSprintNumModal();
-    else if (k === 'escape') { closeSprintModal(); closeSprintNumModal(); }
+    else if (k === 'escape') {
+      closeSprintModal(); closeSprintNumModal();
+      if (cp.style.display === 'block') toggle();
+    }
     else if (k === ' ') {
       e.preventDefault();
       cmd(S.t.run ? 'pause' : 'start');
