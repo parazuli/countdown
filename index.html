@@ -916,12 +916,9 @@ body {
     <div class="modal-body">
       <div class="form-group">
         <label>SPRINT TITLE</label>
-        <input type="text" id="m-sp-label" placeholder="e.g. SPRINT 04" value="SPRINT 04">
+        <input type="text" id="m-sp-label" placeholder="e.g. SPRINT" value="SPRINT">
       </div>
-      <div class="form-group">
-        <label>SUBTITLE / PHASE</label>
-        <input type="text" id="m-sp-sub" placeholder="e.g. DAY 2 · FINAL BUILD" value="DAY 2 · BUILD">
-      </div>
+
       <div class="form-group">
         <label>DURATION PRESETS</label>
         <div class="preset-row">
@@ -1257,6 +1254,13 @@ try {
   const s = JSON.parse(localStorage.getItem('ideax-state'));
   if (s && s.t) S = s;
   if (s && s.blocks && Array.isArray(s.blocks) && s.blocks.length) {
+    // Migrate old blocks: remove numbered sprint labels and day sub-labels
+    s.blocks.forEach(b => {
+      if (b.state === 'development') {
+        b.label = 'SPRINT';
+        delete b.sub;
+      }
+    });
     SCHEDULE.blocks.length = 0;
     SCHEDULE.blocks.push(...s.blocks);
   }
@@ -1389,9 +1393,7 @@ function addSprint(label, sub, sec, pos = 'before-closing', jumpNow = false) {
 function openSprintModal() {
   const modal = $('#modal-sprint');
   if (!modal) return;
-  const nextNum = B.filter(b => b.state === 'development').length + 1;
-  $('#m-sp-label').value = `SPRINT ${String(nextNum).padStart(2, '0')}`;
-  $('#m-sp-sub').value = 'DAY 2 · BUILD';
+  $('#m-sp-label').value = 'SPRINT';
   $('#m-sp-dur').value = '02:00:00';
   $$('.sp-pre').forEach(b => b.classList.toggle('active', b.dataset.sec === '7200'));
   refreshSprintUI();
@@ -1643,7 +1645,7 @@ const SCN = {
     cd: 'hero',
     robot: { x: 140, y: 680, s: 1.25 },
     html: (b, n) =>
-      head(b.label, b.sub) +
+      head(b.label) +
       nextInfo(n).replace('bottom:90px', 'top:76px').replace('right:100px', 'right:100px') +
       `<!-- Live Terminal Stream beside the coding mascot -->
        <div class="abs sc mono" id="lg" style="left:560px;bottom:75px;font-size:20px;color:var(--dim);width:760px;height:120px;overflow:hidden;line-height:1.5;background:rgba(3,11,40,0.78);padding:14px 22px;border-radius:14px;border:1px solid rgba(94,225,255,0.3);backdrop-filter:blur(10px)"></div>`,
@@ -1954,9 +1956,8 @@ function mountControl(host, full) {
       <!-- Custom Sprint Form -->
       <div id="sp-form" style="display:none; margin-top:8px; border-top:1px dashed rgba(94,225,255,0.3); padding-top:8px">
         <small>Sprint Label:</small>
-        <input type="text" id="sp-in-label" placeholder="e.g. SPRINT 04" value="SPRINT 04">
-        <small>Subtitle:</small>
-        <input type="text" id="sp-in-sub" placeholder="e.g. DAY 2 · FINAL BUILD" value="DAY 2 · BUILD">
+        <input type="text" id="sp-in-label" placeholder="e.g. SPRINT" value="SPRINT">
+
         <small>Duration (hh:mm:ss):</small>
         <input type="text" id="sp-in-dur" placeholder="02:00:00" value="02:00:00">
         <small>Insert Position:</small>
@@ -2025,10 +2026,9 @@ function mountControl(host, full) {
   $('#sp-in-cancel').onclick = () => { $('#sp-form').style.display = 'none'; };
   $('#sp-in-submit').onclick = () => {
     const lbl = $('#sp-in-label').value.trim();
-    const sub = $('#sp-in-sub').value.trim();
     const dur = parseDur($('#sp-in-dur').value.trim()) || 2 * 3600;
     const pos = $('#sp-in-pos').value;
-    addSprint(lbl, sub, dur, pos);
+    addSprint(lbl, '', dur, pos);
     $('#sp-form').style.display = 'none';
   };
 
@@ -2198,10 +2198,9 @@ function initScreenshotBar(togglePanel) {
   if (mSubmit) {
     mSubmit.onclick = () => {
       const lbl = $('#m-sp-label').value.trim();
-      const sub = $('#m-sp-sub').value.trim();
       const dur = parseDur($('#m-sp-dur').value.trim()) || 2 * 3600;
       const pos = $('#m-sp-pos').value;
-      addSprint(lbl, sub, dur, pos, false);
+      addSprint(lbl, '', dur, pos, false);
       closeSprintModal();
     };
   }
@@ -2210,10 +2209,9 @@ function initScreenshotBar(togglePanel) {
   if (mSubmitJump) {
     mSubmitJump.onclick = () => {
       const lbl = $('#m-sp-label').value.trim();
-      const sub = $('#m-sp-sub').value.trim();
       const dur = parseDur($('#m-sp-dur').value.trim()) || 2 * 3600;
       const pos = $('#m-sp-pos').value;
-      addSprint(lbl, sub, dur, pos, true);
+      addSprint(lbl, '', dur, pos, true);
       closeSprintModal();
     };
   }
